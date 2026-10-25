@@ -1,0 +1,196 @@
+import json
+import os
+import random
+import streamlit as st
+
+# Configuración de la página para móvil
+st.set_page_config(
+    page_title="Universe Simulator OS", page_icon="🌌", layout="centered"
+)
+
+# Archivo local para guardar la persistencia y que nunca pierdas tus avances
+DB_FILE = "estado_universos.json"
+
+
+def cargar_datos():
+  if os.path.exists(DB_FILE):
+    try:
+      with open(DB_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+    except:
+      pass
+  # Datos por defecto con mundos base y opción a crear más
+  return {
+      "mundos": {
+          "Puerto Bruma": {
+              "lore": (
+                  "Una ciudad portuaria envuelta en una neblina perpetua,"
+                  " donde la tecnología antigua convive con secretos marinos."
+              ),
+              "personajes": [
+                  "Capitán Vane (Aliado)",
+                  "Kaelen (Tecnomántico)",
+                  "Serafina (Informante)",
+              ],
+              "feed": [
+                  {
+                      "autor": "Capitán Vane",
+                      "texto": (
+                          "La marea baja más de lo normal hoy. Algo se mueve"
+                          " allá abajo."
+                      ),
+                      "hora": "08:00",
+                  },
+                  {
+                      "autor": "Serafina",
+                      "texto": (
+                          "Cuidado con los callejones del muelle oeste después"
+                          " de las diez."
+                      ),
+                      "hora": "09:15",
+                  },
+              ],
+              "bitacora": [
+                  "Llegada a Puerto Bruma. La niebla es densa y el ambiente"
+                  " está tenso."
+              ],
+          },
+          "Estación Nadir": {
+              "lore": (
+                  "Una estación espacial abandonada en el límite exterior,"
+                  " flotando en completo silencio."
+              ),
+              "personajes": [
+                  "IA Central (Guía)",
+                  "Dr. Aris (Superviviente)",
+                  "unidad-7 (Androide)",
+              ],
+              "feed": [
+                  {
+                      "autor": "IA Central",
+                      "texto": (
+                          "Advertencia: Sectores de oxígeno restringidos en el"
+                          " anillo B."
+                      ),
+                      "hora": "07:30",
+                  }
+              ],
+              "bitacora": [
+                  "Desperté en la Estación Nadir. Los sistemas parpadean."
+              ],
+          },
+      }
+  }
+
+
+def guardar_datos(data):
+  with open(DB_FILE, "w", encoding="utf-8") as f:
+    json.dump(data, f, ensure_ascii=False, indent=4)
+
+
+# Inicializar estado
+if "data" not in st.session_state:
+  st.session_state.data = cargar_datos()
+
+# Interfaz Principal estilo OS Móvil
+st.title("🌌 Universe Simulator OS")
+
+# Menú lateral para elegir o crear mundos
+st.sidebar.header("🎛️ Panel de Control")
+opcion_menu = st.sidebar.selectbox(
+    "Selecciona una sección", ["📱 Simulador / Activa", "✨ Crear Nuevo Mundo"]
+)
+
+mundos_disponibles = list(st.session_state.data["mundos"].keys())
+mundo_actual = st.sidebar.selectbox("🌍 Universo Activo", mundos_disponibles)
+
+if opcion_menu == "✨ Crear Nuevo Mundo":
+  st.subheader("Crea tu propio universo")
+  with st.form("form_nuevo_mundo"):
+    nombre_nuevo = st.text_input("Nombre del Universo")
+    lore_nuevo = st.text_area(
+        "Historia / Lore inicial (¿De qué trata tu mundo?)"
+    )
+    personajes_nuevo = st.text_area(
+        "Personajes principales (separados por comas)"
+    )
+    submit_mundo = st.form_submit_button("Crear Universo")
+
+    if submit_mundo and nombre_nuevo:
+      lista_pers = [
+          p.strip() for p in personajes_nuevo.split(",") if p.strip()
+      ]
+      st.session_state.data["mundos"][nombre_nuevo] = {
+          "lore": lore_nuevo,
+          "personajes": lista_pers if lista_pers else ["Ciudadano Anónimo"],
+          "feed": [{
+              "autor": "Sistema",
+              "texto": f"Inicio de simulación en {nombre_nuevo}.",
+              "hora": "00:00",
+          }],
+          "bitacora": [f"Has ingresado a {nombre_nuevo}. {lore_nuevo}"],
+      }
+      guardar_datos(st.session_state.data)
+      st.success(f"¡Universo '{nombre_nuevo}' creado con éxito!")
+      st.rerun()
+
+else:
+  # Vista del Mundo Activo
+  info_mundo = st.session_state.data["mundos"][mundo_actual]
+
+  st.markdown(f"### 📍 {mundo_actual}")
+  st.info(f"**Lore:** {info_mundo['lore']}")
+
+  # Pestañas internas estilo app móvil
+  tab1, tab2, tab3 = st.tabs(
+      ["📝 Bitácora", "💬 Feed Social", "⚡ Escribir Acción"]
+  )
+
+  with tab1:
+    st.subheader("Historial de Sucesos")
+    for nota in reversed(info_mundo["bitacora"]):
+      st.write(f"• {nota}")
+
+  with tab2:
+    st.subheader("Red Social del Universo")
+    for post in reversed(info_mundo["feed"]):
+      with st.container():
+        st.markdown(f"**@{post['autor']}**  *({post['hora']})*")
+        st.write(post["texto"])
+        st.divider()
+
+  with tab3:
+    st.subheader("¿Qué deseas hacer?")
+    accion_usuario = st.text_area(
+        "Escribe tu acción o decisión libremente:",
+        placeholder=(
+            "Ej: Voy a buscar al líder de la resistencia en el mercado..."
+        ),
+    )
+
+    if st.button("Ejecutar Acción"):
+      if accion_usuario.strip():
+        # Generar consecuencia simulada basada en la acción
+        personaje_involucrado = random.choice(info_mundo["personajes"])
+        nueva_entrada_bitacora = (
+            f"Acción realizada: '{accion_usuario}' -> Generó tensiones con"
+            f" {personaje_involucrado}."
+        )
+        nuevo_post_feed = {
+            "autor": personaje_involucrado.split(" ")[0],
+            "texto": (
+                f"He escuchado sobre lo que hiciste con '{accion_usuario[:20]}...'"
+                " ¿Qué tramas?"
+            ),
+            "hora": "12:45",
+        }
+
+        # Guardar en el estado y en el archivo json permanente
+        info_mundo["bitacora"].append(nueva_entrada_bitacora)
+        info_mundo["feed"].append(nuevo_post_feed)
+        guardar_datos(st.session_state.data)
+
+        st.success("¡Acción procesada por el simulador!")
+        st.rerun()
+      else:
+        st.warning("Por favor escribe una acción antes de ejecutarla.")
