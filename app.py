@@ -11,7 +11,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# Estilo visual avanzado: Simula una interfaz de teléfono / Cyber-OS oscuro
+# Estilo visual avanzado: Interfaz de teléfono / Cyber-OS con efecto glassmorphism
 st.markdown("""
     <style>
     .main {
@@ -22,24 +22,23 @@ st.markdown("""
         background: radial-gradient(circle at center, #11141d 0%, #050508 100%);
     }
     .phone-container {
-        background-color: #0d1117;
+        background-color: rgba(13, 17, 23, 0.85);
         border: 2px solid #30363d;
-        border-radius: 24px;
-        padding: 20px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+        border-radius: 28px;
+        padding: 25px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(10px);
         margin-bottom: 20px;
     }
-    .app-icon {
-        background-color: #161b22;
-        border: 1px solid #30363d;
-        border-radius: 16px;
-        padding: 15px;
-        text-align: center;
-        transition: 0.2s;
-    }
-    .app-icon:hover {
-        border-color: #58a6ff;
-        background-color: #1f242c;
+    .os-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 12px;
+        color: #8b949e;
+        margin-bottom: 15px;
+        border-bottom: 1px solid #21262d;
+        padding-bottom: 8px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -65,132 +64,152 @@ if "data" not in st.session_state:
 if "current_app" not in st.session_state:
     st.session_state.current_app = "Home"
 
-# Barra superior estilo barra de estado de celular
-col_s1, col_s2, col_s3 = st.columns([2, 4, 2])
-with col_s1:
-    st.caption("📶 5G  🔋 100%")
-with col_s2:
-    st.markdown("<p style='text-align: center; margin: 0; font-size: 14px;'><b>UNIVERSE MOBILE OS</b></p>", unsafe_allow_html=True)
-with col_s3:
-    current_time = datetime.now().strftime("%H:%M")
-    st.caption(f"🕒 {current_time}")
-
-st.markdown("---")
-
-# ================= PANTALLA DE INICIO (HOME / ESCRITORIO DE APPS) =================
-if st.session_state.current_app == "Home":
-    st.markdown("### 📱 Pantalla Principal")
-    st.caption("Selecciona una aplicación para abrirla:")
-
-    c1, c2, c3 = st.columns(3)
+# Contenedor estilo carcasa de celular
+with st.container():
+    st.markdown('<div class="phone-container">', unsafe_allow_html=True)
     
-    with c1:
-        if st.button("🌌\nCrear Mundo", use_container_width=True):
-            st.session_state.current_app = "Crear Mundo"
-            st.rerun()
-    with c2:
-        if st.button("👤\nPersonaje", use_container_width=True):
-            st.session_state.current_app = "Crear Personaje"
-            st.rerun()
-    with c3:
-        if st.button("📊\nEstadísticas", use_container_width=True):
-            st.session_state.current_app = "Estadísticas"
-            st.rerun()
+    # Barra superior de estado
+    col_s1, col_s2, col_s3 = st.columns([2, 4, 2])
+    with col_s1:
+        st.caption("📶 5G  🔋 100%")
+    with col_s2:
+        st.markdown("<p style='text-align: center; margin: 0; font-size: 13px; font-weight: bold; color: #58a6ff;'>WORLD OS</p>", unsafe_allow_html=True)
+    with col_s3:
+        current_time = datetime.now().strftime("%H:%M")
+        st.caption(f"🕒 {current_time}")
 
-    c4, c5 = st.columns(2)
-    with c4:
-        if st.button("💬\nChat Inmersivo", use_container_width=True):
-            st.session_state.current_app = "Chat Inmersivo"
+    st.markdown("---")
+
+    # ================= PANTALLA DE INICIO (HOME / ESCRITORIO DE APPS) =================
+    if st.session_state.current_app == "Home":
+        st.markdown("#### 📱 Escritorio")
+        st.caption("Toca una aplicación para abrirla:")
+
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            if st.button("🌌\nMundos", use_container_width=True):
+                st.session_state.current_app = "Crear Mundo"
+                st.rerun()
+        with c2:
+            if st.button("👤\nPersonajes", use_container_width=True):
+                st.session_state.current_app = "Crear Personaje"
+                st.rerun()
+        with c3:
+            if st.button("📊\nEstadísticas", use_container_width=True):
+                st.session_state.current_app = "Estadísticas"
+                st.rerun()
+
+        c4, c5, c6 = st.columns(3)
+        with c4:
+            if st.button("💬\nChat IA", use_container_width=True):
+                st.session_state.current_app = "Chat Inmersivo"
+                st.rerun()
+        with c5:
+            if st.button("📸\nRedes", use_container_width=True):
+                st.session_state.current_app = "Redes Sociales"
+                st.rerun()
+        with c6:
+            if st.button("⚡\nEventos", use_container_width=True):
+                st.session_state.current_app = "Acción"
+                st.rerun()
+
+    # ================= MÓDULO: CREAR MUNDO =================
+    elif st.session_state.current_app == "Crear Mundo":
+        if st.button("⬅️ Volver al Escritorio"):
+            st.session_state.current_app = "Home"
             st.rerun()
-    with c5:
-        if st.button("⚡\nAcción / Evento", use_container_width=True):
-            st.session_state.current_app = "Acción"
+        
+        st.markdown("### 🌌 Gestor de Universos")
+        nombre_mundo = st.text_input("Nombre del Universo / Fandom (Ej: My Hero Academia)")
+        if st.button("Crear Universo"):
+            if nombre_mundo:
+                if nombre_mundo not in st.session_state.data["mundos"]:
+                    st.session_state.data["mundos"][nombre_mundo] = {"personajes": {}, "historia": []}
+                    guardar_datos(st.session_state.data)
+                    st.success(f"¡Universo '{nombre_mundo}' registrado!")
+                else:
+                    st.warning("Este universo ya existe.")
+
+    # ================= MÓDULO: CREAR PERSONAJE =================
+    elif st.session_state.current_app == "Crear Personaje":
+        if st.button("⬅️ Volver al Escritorio"):
+            st.session_state.current_app = "Home"
             st.rerun()
-
-# ================= MÓDULO: CREAR MUNDO =================
-elif st.session_state.current_app == "Crear Mundo":
-    if st.button("⬅️ Volver al Inicio"):
-        st.session_state.current_app = "Home"
-        st.rerun()
-    
-    st.markdown("### 🌌 Editor de Mundos")
-    nombre_mundo = st.text_input("Nombre del Universo / Lore principal")
-    if st.button("Guardar Mundo"):
-        if nombre_mundo:
-            st.session_state.data["mundos"][nombre_mundo] = {"personajes": {}, "historia": []}
-            guardar_datos(st.session_state.data)
-            st.success(f"¡Mundo '{nombre_mundo}' creado con éxito!")
-
-# ================= MÓDULO: CREAR PERSONAJE =================
-elif st.session_state.current_app == "Crear Personaje":
-    if st.button("⬅️ Volver al Inicio"):
-        st.session_state.current_app = "Home"
-        st.rerun()
-        
-    st.markdown("### 👤 Registro de Personajes")
-    mundos_disponibles = list(st.session_state.data.get("mundos", {}).keys())
-    
-    if mundos_disponibles:
-        m_sel = st.selectbox("Seleccionar Universo", mundos_disponibles)
-        p_nombre = st.text_input("Nombre del Personaje")
-        p_rol = st.text_input("Rol o Descripción (Ej: Estudiante, Héroe)")
-        
-        if st.button("Registrar Personaje"):
-            if p_nombre:
-                st.session_state.data["mundos"][m_sel]["personajes"][p_nombre] = {
-                    "rol": p_rol,
-                    "romance": 50,
-                    "amistad": 50,
-                    "confianza": 50,
-                    "odio": 0
-                }
-                guardar_datos(st.session_state.data)
-                st.success(f"¡Personaje '{p_nombre}' añadido al universo!")
-    else:
-        st.warning("Primero crea un mundo en la sección 'Crear Mundo'.")
-
-# ================= MÓDULO: ESTADÍSTICAS =================
-elif st.session_state.current_app == "Estadísticas":
-    if st.button("⬅️ Volver al Inicio"):
-        st.session_state.current_app = "Home"
-        st.rerun()
-        
-    st.markdown("### 📊 Panel de Relaciones y Estadísticas")
-    mundos_disponibles = list(st.session_state.data.get("mundos", {}).keys())
-    
-    if mundos_disponibles:
-        m_sel = st.selectbox("Ver Universo", mundos_disponibles, key="stat_mundo")
-        personajes = st.session_state.data["mundos"][m_sel]["personajes"]
-        
-        if personajes:
-            p_sel = st.selectbox("Seleccionar Personaje", list(personajes.keys()), key="stat_pj")
-            stats = personajes[p_sel]
             
-            st.markdown(f"**Estado actual con {p_sel}:**")
-            st.progress(stats["romance"] / 100, text=f"Romance: {stats['romance']}%")
-            st.progress(stats["amistad"] / 100, text=f"Amistad: {stats['amistad']}%")
-            st.progress(stats["confianza"] / 100, text=f"Confianza: {stats['confianza']}%")
-            st.progress(stats["odio"] / 100, text=f"Odio: {stats['odio']}%")
+        st.markdown("### 👤 Registro de Personajes")
+        mundos_disponibles = list(st.session_state.data.get("mundos", {}).keys())
+        
+        if mundos_disponibles:
+            m_sel = st.selectbox("Seleccionar Universo", mundos_disponibles)
+            p_nombre = st.text_input("Nombre del Personaje (Ej: Shoto Todoroki)")
+            p_rol = st.text_input("Rol (Ej: Estudiante / Héroe)")
+            
+            if st.button("Guardar Personaje"):
+                if p_nombre:
+                    st.session_state.data["mundos"][m_sel]["personajes"][p_nombre] = {
+                        "rol": p_rol,
+                        "romance": 40,
+                        "amistad": 55,
+                        "confianza": 60,
+                        "odio": 5
+                    }
+                    guardar_datos(st.session_state.data)
+                    st.success(f"¡{p_nombre} añadido con éxito!")
         else:
-            st.info("No hay personajes en este mundo todavía.")
-    else:
-        st.warning("No hay mundos creados.")
+            st.warning("Primero crea un universo en la app de Mundos.")
 
-# ================= MÓDULO: CHAT INMERSIVO =================
-elif st.session_state.current_app == "Chat Inmersivo":
-    if st.button("⬅️ Volver al Inicio"):
-        st.session_state.current_app = "Home"
-        st.rerun()
+    # ================= MÓDULO: ESTADÍSTICAS =================
+    elif st.session_state.current_app == "Estadísticas":
+        if st.button("⬅️ Volver al Escritorio"):
+            st.session_state.current_app = "Home"
+            st.rerun()
+            
+        st.markdown("### 📊 Panel de Relaciones")
+        mundos_disponibles = list(st.session_state.data.get("mundos", {}).keys())
         
-    st.markdown("### 💬 Chat Inmersivo")
-    st.info("Próximamente conectado con la IA para simular interacciones basadas en tus estadísticas.")
+        if mundos_disponibles:
+            m_sel = st.selectbox("Ver Universo", mundos_disponibles, key="stat_mundo")
+            personajes = st.session_state.data["mundos"][m_sel].get("personajes", {})
+            
+            if personajes:
+                p_sel = st.selectbox("Seleccionar Personaje", list(personajes.keys()), key="stat_pj")
+                stats = personajes[p_sel]
+                
+                st.markdown(f"**Vínculos con {p_sel}:**")
+                st.progress(stats.get("romance", 50) / 100, text=f"Romance: {stats.get('romance', 50)}%")
+                st.progress(stats.get("amistad", 50) / 100, text=f"Amistad: {stats.get('amistad', 50)}%")
+                st.progress(stats.get("confianza", 50) / 100, text=f"Confianza: {stats.get('confianza', 50)}%")
+                st.progress(stats.get("odio", 0) / 100, text=f"Odio: {stats.get('odio', 0)}%")
+            else:
+                st.info("Aún no hay personajes en este mundo.")
+        else:
+            st.warning("No hay universos registrados.")
 
-# ================= MÓDULO: ACCIÓN / EVENTO =================
-elif st.session_state.current_app == "Acción":
-    if st.button("⬅️ Volver al Inicio"):
-        st.session_state.current_app = "Home"
-        st.rerun()
-        
-    st.markdown("### ⚡ Ejecutar Evento Dinámico")
-    st.info("Aquí ocurrirán los eventos especiales que alteran el Lore y las estadísticas en tiempo real.")
-        
+    # ================= MÓDULO: CHAT INMERSIVO =================
+    elif st.session_state.current_app == "Chat Inmersivo":
+        if st.button("⬅️ Volver al Escritorio"):
+            st.session_state.current_app = "Home"
+            st.rerun()
+            
+        st.markdown("### 💬 Mensajes (Chat)")
+        st.info("Aquí conversarán tus personajes basándose en el nivel de tus estadísticas.")
+
+    # ================= MÓDULO: REDES SOCIALES =================
+    elif st.session_state.current_app == "Redes Sociales":
+        if st.button("⬅️ Volver al Escritorio"):
+            st.session_state.current_app = "Home"
+            st.rerun()
+            
+        st.markdown("### 📸 Worldgram (Feed)")
+        st.info("Aquí aparecerán las publicaciones y estados de los personajes de tus fandoms.")
+
+    # ================= MÓDULO: ACCIÓN / EVENTO =================
+    elif st.session_state.current_app == "Acción":
+        if st.button("⬅️ Volver al Escritorio"):
+            st.session_state.current_app = "Home"
+            st.rerun()
+            
+        st.markdown("### ⚡ Eventos del Lore")
+        st.info("Dispara eventos que alterarán el destino de tus personajes.")
+
+    st.markdown('</div>', unsafe_allow_html=True)
