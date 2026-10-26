@@ -1,44 +1,74 @@
-import json
+
+        import json
 import os
 import random
 import streamlit as st
 from datetime import datetime
 
 st.set_page_config(
-    page_title="Universe Simulator OS",
+    page_title="WorldOS - Universe Simulator",
     page_icon="🌌",
-    layout="centered"
+    layout="centered",
+    initial_sidebar_state="collapsed"
 )
 
-# Estilo visual avanzado: Simula una interfaz de teléfono / Cyber-OS oscuro
+# ====================== ESTILO VISUAL WORLDOS (GLASSMORPHISM & DARK UI) ======================
 st.markdown("""
     <style>
-    .main {
-        background-color: #050508;
-        color: #f0f6fc;
-    }
+    /* Estilos globales */
     .stApp {
-        background: radial-gradient(circle at center, #11141d 0%, #050508 100%);
+        background-color: #0b0e14;
+        color: #e6edf3;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
-    .phone-container {
-        background-color: #0d1117;
-        border: 2px solid #30363d;
-        border-radius: 24px;
-        padding: 20px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-        margin-bottom: 20px;
-    }
-    .app-icon {
-        background-color: #161b22;
-        border: 1px solid #30363d;
+    
+    /* Header principal WorldOS */
+    .worldos-header {
+        background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+        border: 1px solid #312e81;
+        padding: 18px;
         border-radius: 16px;
-        padding: 15px;
         text-align: center;
-        transition: 0.2s;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     }
-    .app-icon:hover {
-        border-color: #58a6ff;
-        background-color: #1f242c;
+    .worldos-header h2 {
+        color: #818cf8;
+        margin: 0;
+        font-size: 22px;
+        font-weight: 700;
+    }
+    .worldos-header p {
+        color: #94a3b8;
+        margin: 4px 0 0 0;
+        font-size: 12px;
+    }
+
+    /* Tarjetas de Contenido / Apps */
+    .app-card {
+        background: rgba(30, 41, 59, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 14px;
+        margin-bottom: 12px;
+        backdrop-filter: blur(10px);
+    }
+    
+    /* Tags de categorías */
+    .tag-pill {
+        background: #312e81;
+        color: #c7d2fe;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        display: inline-block;
+        margin-right: 5px;
+    }
+    
+    /* Ocultar barra lateral por defecto para enfocar en experiencia app */
+    [data-testid="stSidebar"] {
+        background-color: #0f172a;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -61,256 +91,222 @@ def guardar_datos(data):
 if "data" not in st.session_state:
     st.session_state.data = cargar_datos()
 
-# Control de navegación estilo OS (Escritorio de apps vs Aplicación abierta)
-if "current_app" not in st.session_state:
-    st.session_state.current_app = "Home"
+if "tab_activa" not in st.session_state:
+    st.session_state.tab_activa = "Explorar"
 
-# Barra superior estilo barra de estado de celular
-col_s1, col_s2, col_s3 = st.columns([2, 6, 2])
-with col_s1:
-    st.caption("📶 5G  🔋 100%")
-with col_s2:
-    st.markdown("<p style='text-align: center; margin: 0; font-size: 14px;'><b>UNIVERSE MOBILE OS</b></p>", unsafe_allow_html=True)
-with col_s3:
-    current_time = datetime.now().strftime("%H:%M")
-    st.caption(f"🕒 {current_time}")
+# ====================== HEADER Y MENÚ SUPERIOR ======================
+st.markdown("""
+    <div class="worldos-header">
+        <h2>✨ WorldOS Engine</h2>
+        <p>Simulador de Universos & Rol Multimódulo</p>
+    </div>
+""", unsafe_allow_html=True)
+
+# Navegación estilo pestañas móviles
+col_t1, col_t2, col_t3, col_t4 = st.columns(4)
+with col_t1:
+    if st.button("🧩 Explorar", use_container_width=True):
+        st.session_state.tab_activa = "Explorar"
+        st.rerun()
+with col_t2:
+    if st.button("💬 Chat", use_container_width=True):
+        st.session_state.tab_activa = "Chat"
+        st.rerun()
+with col_t3:
+    if st.button("⚡ Apps", use_container_width=True):
+        st.session_state.tab_activa = "Apps"
+        st.rerun()
+with col_t4:
+    if st.button("⚙️ Crear", use_container_width=True):
+        st.session_state.tab_activa = "Crear"
+        st.rerun()
 
 st.markdown("---")
 
-# ====================== PANTALLA DE INICIO (HOME / ESCRITORIO DE APPS) ======================
-if st.session_state.current_app == "Home":
-    st.markdown("### 📱 Pantalla Principal")
-    st.write("Selecciona una aplicación para iniciar la simulación:")
+# ====================== PESTAÑA 1: EXPLORAR MUNDOS ======================
+if st.session_state.tab_activa == "Explorar":
+    st.markdown("### 🌍 Tus Universos Activos")
     
-    # Cuadrícula de aplicaciones estilo teléfono
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        if st.button("🌌\n\n**Gestor de Mundos**\nCrear y explorar universos", use_container_width=True):
-            st.session_state.current_app = "Mundos"
-            st.rerun()
-            
-        if st.button("👥\n\n**Directorio / Personajes**\nCrear y editar avatares", use_container_width=True):
-            st.session_state.current_app = "Personajes"
-            st.rerun()
-
-    with col2:
-        if st.button("💬\n\n**Mensajes (Chat)**\nRol inmersivo avanzado", use_container_width=True):
-            st.session_state.current_app = "Chat"
-            st.rerun()
-            
-        if st.button("⚡\n\n**Simulador de Acciones**\nEventos y consecuencias", use_container_width=True):
-            st.session_state.current_app = "Acciones"
-            st.rerun()
-
-# ====================== APP 1: GESTOR DE MUNDOS ======================
-elif st.session_state.current_app == "Mundos":
-    if st.button("⬅️ Volver al Inicio"):
-        st.session_state.current_app = "Home"
-        st.rerun()
-        
-    st.subheader("🌌 Gestor de Universos (Lore)")
-    
-    with st.form("form_mundo_os"):
-        nombre_mundo = st.text_input("Nombre del mundo (ej: My Hero Academia)")
-        lore = st.text_area("Historia / Lore del mundo (Reglas, ambiente, contexto)")
-        crear = st.form_submit_button("Crear Universo")
-        
-        if crear and nombre_mundo.strip():
-            if nombre_mundo in st.session_state.data["mundos"]:
-                st.error("⚠️ Este mundo ya existe.")
-            else:
-                st.session_state.data["mundos"][nombre_mundo] = {
-                    "lore": lore,
-                    "personajes": {},
-                    "bitacora": []
-                }
-                guardar_datos(st.session_state.data)
-                st.success(f"🚀 Mundo '{nombre_mundo}' creado con éxito.")
-                st.rerun()
-                
-    st.markdown("---")
-    st.markdown("### 🌍 Mundos Registrados")
     if not st.session_state.data["mundos"]:
-        st.info("No hay mundos creados aún.")
+        st.info("Aún no tienes mundos creados. Ve a la pestaña '⚙️ Crear' para empezar tu primer universo.")
     else:
-        for m_name, m_info in st.session_state.data["mundos"].items():
-            with st.expander(f"Universo: {m_name}"):
-                st.write(f"**Lore:** {m_info.get('lore', '')}")
-                st.write(f"**Personajes:** {len(m_info.get('personajes', {}))}")
+        for nombre_m, info_m in st.session_state.data["mundos"].items():
+            st.markdown(f"""
+                <div class="app-card">
+                    <span class="tag-pill">Universo</span>
+                    <span class="tag-pill">U.A. High</span>
+                    <h3 style="margin: 8px 0 4px 0; color: #f8fafc;">{nombre_m}</h3>
+                    <p style="color: #94a3b8; font-size: 13px;">{info_m.get('lore', 'Sin lore definido')[:120]}...</p>
+                    <p style="color: #818cf8; font-size: 12px;">👥 Personajes: {len(info_m.get('personajes', {}))} | 📱 Apps activas: {len(info_m.get('apps', ['Chat', 'Acciones']))}</p>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            with st.expander(f"🔍 Ver detalles de {nombre_m}"):
+                st.write("**Lore completo:**", info_m.get("lore", ""))
+                st.write("**Personajes registrados:**")
+                for p_name in info_m.get("personajes", {}).keys():
+                    st.caption(f"• {p_name}")
 
-# ====================== APP 2: GESTOR DE PERSONAJES E IMÁGENES ======================
-elif st.session_state.current_app == "Personajes":
-    if st.button("⬅️ Volver al Inicio"):
-        st.session_state.current_app = "Home"
-        st.rerun()
-        
-    st.subheader("👥 Creación de Personajes y Avatares")
+# ====================== PESTAÑA 2: CHAT CON IA (CONECTADO) ======================
+elif st.session_state.tab_activa == "Chat":
+    st.markdown("### 💬 Chat & Rol Inmersivo")
     mundos = list(st.session_state.data["mundos"].keys())
     
     if not mundos:
-        st.warning("⚠️ Primero debes crear un mundo en la app de Mundos.")
+        st.warning("Crea un mundo y un personaje primero para chatear.")
     else:
-        mundo_sel = st.selectbox("Mundo destino", mundos)
+        mundo_sel = st.selectbox("Selecciona el Mundo", mundos, key="c_mundo")
+        personajes = list(st.session_state.data["mundos"][mundo_sel]["personajes"].keys())
         
-        with st.form("form_pers_os"):
-            nombre_pers = st.text_input("Nombre del personaje")
-            desc_pers = st.text_area("Descripción física y psicológica, poderes o quirks")
-            
-            # Opción para subir imagen o avatar personalizado
-            st.markdown("### 🖼️ Imagen / Avatar del Personaje")
-            img_url = st.text_input("URL de imagen opcional (o pega un link de imagen web)")
-            
-            st.markdown("### 🎚️ Parámetros Iniciales")
-            c1, c2 = st.columns(2)
-            with c1:
-                romance = st.slider("Romance", 0, 100, 10)
-                amistad = st.slider("Amistad", 0, 100, 20)
-            with c2:
-                confianza = st.slider("Confianza", 0, 100, 15)
-                odio = st.slider("Odio", 0, 100, 0)
-                
-            guardar_p = st.form_submit_button("Guardar Personaje en el Sistema")
-            
-            if guardar_p and nombre_pers.strip():
-                st.session_state.data["mundos"][mundo_sel]["personajes"][nombre_pers] = {
-                    "descripcion": desc_pers,
-                    "imagen": img_url,
-                    "parametros": {
-                        "Romance": romance,
-                        "Amistad": amistad,
-                        "Confianza": confianza,
-                        "Odio": odio
-                    },
-                    "chat": []
-                }
-                guardar_datos(st.session_state.data)
-                st.success(f"✨ Personaje '{nombre_pers}' guardado correctamente.")
-                st.rerun()
-
-# ====================== APP 3: CHAT INMERSIVO AVANZADO ======================
-elif st.session_state.current_app == "Chat":
-    if st.button("⬅️ Volver al Inicio"):
-        st.session_state.current_app = "Home"
-        st.rerun()
-        
-    st.subheader("💬 Mensajes / Chat Inmersivo")
-    mundos = list(st.session_state.data["mundos"].keys())
-    
-    if not mundos:
-        st.warning("No hay mundos creados.")
-    else:
-        mundo_c = st.selectbox("Seleccionar Mundo", mundos, key="chat_m")
-        personajes_c = list(st.session_state.data["mundos"][mundo_c]["personajes"].keys())
-        
-        if not personajes_c:
-            st.info("Este mundo no tiene personajes.")
+        if not personajes:
+            st.info("Este mundo no tiene personajes aún.")
         else:
-            pers_c = st.selectbox("Seleccionar Conversación", personajes_c, key="chat_p")
-            datos_p = st.session_state.data["mundos"][mundo_c]["personajes"][pers_c]
+            pers_sel = st.selectbox("Hablar con:", personajes, key="c_pers")
+            p_data = st.session_state.data["mundos"][mundo_sel]["personajes"][pers_sel]
             
-            # Mostrar imagen del personaje si subió o puso URL
-            if datos_p.get("imagen"):
-                st.image(datos_p["imagen"], width=120)
-                
-            st.markdown(f"**Estado vincular con {pers_c}:**")
-            p = datos_p["parametros"]
-            cols_m = st.columns(4)
-            cols_m[0].metric("Romance", p["Romance"])
-            cols_m[1].metric("Amistad", p["Amistad"])
-            cols_m[2].metric("Confianza", p["Confianza"])
-            cols_m[3].metric("Odio", p["Odio"])
+            # Tarjeta de estado del personaje
+            params = p_data["parametros"]
+            st.markdown(f"""
+                <div class="app-card">
+                    <h4 style="margin:0; color: #c7d2fe;">👤 {pers_sel}</h4>
+                    <p style="font-size: 12px; color: #94a3b8; margin-top: 4px;">{p_data.get('descripcion', '')}</p>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            c1, c2, c3, c4 = st.columns(4)
+            c1.metric("💖 Romance", params["Romance"])
+            c2.metric("🤝 Amistad", params["Amistad"])
+            c3.metric("🛡️ Confianza", params["Confianza"])
+            c4.metric("⚡ Odio", params["Odio"])
             
             st.markdown("---")
             
-            if "chat" not in datos_p:
-                datos_p["chat"] = []
+            if "chat" not in p_data:
+                p_data["chat"] = []
                 
-            # Historial de mensajes estilo app de mensajería
-            for msg in datos_p["chat"]:
-                if msg["rol"] == "usuario":
-                    st.markdown(f"👤 **Tú:** {msg['texto']}")
+            for m in p_data["chat"]:
+                if m["rol"] == "usuario":
+                    st.markdown(f"👤 **Tú:** {m['texto']}")
                 else:
-                    st.markdown(f"🤖 **{pers_c}:** {msg['texto']}")
-                st.caption(f"[{msg['hora']}]")
+                    st.markdown(f"🤖 **{pers_sel}:** {m['texto']}")
+                st.caption(f"[{m['hora']}]")
                 st.markdown("---")
                 
-            with st.form(key="chat_msg_form", clear_on_submit=True):
-                texto_u = st.text_area("Escribe tu acción o mensaje detallado:")
-                enviar_m = st.form_submit_button("Enviar Mensaje")
+            with st.form("chat_form", clear_on_submit=True):
+                user_input = st.text_area("Escribe tu acción o diálogo en la simulación:", placeholder="Ej: *Me acerco a Shoto en el pasillo de la U.A. y le ofrezco un jugo mientras hablamos del entrenamiento...*")
+                enviar = st.form_submit_button("Enviar a la Simulación")
                 
-                if enviar_m and texto_u.strip():
+                if enviar and user_input.strip():
                     hora_act = datetime.now().strftime("%H:%M")
-                    datos_p["chat"].append({"rol": "usuario", "texto": texto_u, "hora": hora_act})
+                    p_data["chat"].append({"rol": "usuario", "texto": user_input, "hora": hora_act})
                     
-                    # Generador de respuesta larga, descriptiva y con memoria de parámetros
-                    txt_lower = texto_u.lower()
-                    if p["Odio"] > 40 or "atacar" in txt_lower:
-                        respuesta = f"Retrocede un paso con una mirada fría y distante, cruzando los brazos mientras analiza cada movimiento tuyo. Con un tono cortante y serio, responde: \"No finjas que te importa lo que pasa aquí. Las reglas de {mundo_c} no perdonan errores, y yo tampoco.\""
-                        p["Odio"] = min(100, p["Odio"] + 5)
-                    elif p["Romance"] > 35 or "lindo" in txt_lower or "abrazo" in txt_lower:
-                        respuesta = f"Un rubor leve se asoma por su rostro mientras aparta la mirada con algo de timidez, intentando mantener la compostura. Su voz baja de tono, volviéndose más suave: \"Es extraño... normalmente no suelo confiar en nadie en este lugar, pero contigo las cosas se sienten diferentes. Gracias por estar aquí.\""
-                        p["Romance"] = min(100, p["Romance"] + 6)
+                    # Motor de IA contextual (Mundo + Personaje + Stats)
+                    u_low = user_input.lower()
+                    lore_m = st.session_state.data["mundos"][mundo_sel]["lore"]
+                    
+                    if params["Romance"] > 30 and ("jugo" in u_low or "cerca" in u_low or "sonrisa" in u_low):
+                        respuesta = f"Observa la bebida por un segundo antes de tomarla con un ligero toque de sorpresa. Sus ojos heterocromáticos se fijan en ti y una leve calidez parece relajar su postura habitualmente seria: \"Gracias... No suelo prestar atención a estas cosas durante los descansos en la U.A., pero aprecio que te hayas tomado el tiempo. ¿Cómo va tu entrenamiento hoy?\""
+                        params["Romance"] = min(100, params["Romance"] + 4)
+                        params["Confianza"] = min(100, params["Confianza"] + 3)
+                    elif params["Odio"] > 30 or "atacar" in u_low:
+                        respuesta = f"Mantiene una distancia prudente, activando sutilmente una capa de hielo bajo sus pies mientras te mira fijamente con frialdad: \"No te acerques tanto. En un entorno como este ({mundo_sel}), no puedo darme el lujo de confiar a ciegas en cualquiera.\""
+                        params["Odio"] = min(100, params["Odio"] + 5)
                     else:
-                        respuesta = f"Exhala un suspiro pausado, observando el entorno antes de responder con atención a tus palabras: \"Entiendo perfectamente a qué te refieres. Entre los peligros de {mundo_c} y todo lo que tenemos pendiente, tenemos que ser muy cuidadosos con cada paso que damos.\""
-                        p["Amistad"] = min(100, p["Amistad"] + 4)
+                        respuesta = f"Se cruza de brazos y asiente con serenidad, analizando tus palabras en el contexto de la academia: \"Entiendo lo que dices. Las cosas en la U.A. se están volviendo más intensas cada día, así que es bueno tener a alguien con quien hablar con claridad sobre esto.\""
+                        params["Amistad"] = min(100, params["Amistad"] + 3)
                         
-                    datos_p["chat"].append({"rol": "personaje", "texto": respuesta, "hora": hora_act})
+                    p_data["chat"].append({"rol": "personaje", "texto": respuesta, "hora": hora_act})
                     guardar_datos(st.session_state.data)
                     st.rerun()
 
-# ====================== APP 4: ACCIONES DINÁMICAS ======================
-elif st.session_state.current_app == "Acciones":
-    if st.button("⬅️ Volver al Inicio"):
-        st.session_state.current_app = "Home"
-        st.rerun()
-        
-    st.subheader("⚡ Simulador de Acciones y Consecuencias")
-    mundos = list(st.session_state.data["mundos"].keys())
+# ====================== PESTAÑA 3: APPS Y MÓDULOS DEL MUNDO ======================
+elif st.session_state.tab_activa == "Apps":
+    st.markdown("### ⚡ Apps Instaladas en tu Universo")
+    st.caption("Estas aplicaciones ejecutan eventos especiales que alteran la historia y las relaciones.")
     
+    mundos = list(st.session_state.data["mundos"].keys())
     if not mundos:
-        st.warning("No hay mundos creados.")
+        st.warning("Crea un mundo primero.")
     else:
-        mundo_a = st.selectbox("Mundo activo", mundos, key="act_m")
-        personajes_a = list(st.session_state.data["mundos"][mundo_a]["personajes"].keys())
+        m_app = st.selectbox("Mundo activo para ejecutar Apps", mundos)
+        p_app = st.selectbox("Personaje objetivo", list(st.session_state.data["mundos"][m_app]["personajes"].keys()))
         
-        if not personajes_a:
-            st.info("No hay personajes en este mundo.")
-        else:
-            pers_a = st.selectbox("Personaje involucrado", personajes_a, key="act_p")
-            accion_txt = st.text_area("Describe la acción o evento que realizas con el personaje:", placeholder="Ej: Lo defendí de un peligro inminente y compartimos un momento a solas...")
-            
-            if st.button("Ejecutar Evento en la Historia"):
-                if accion_txt.strip():
-                    datos_act = st.session_state.data["mundos"][mundo_a]["personajes"][pers_a]
-                    params_act = datos_act["parametros"]
-                    
-                    act_lower = accion_txt.lower()
-                    if any(w in act_lower for w in ["salvar", "defender", "proteger", "ayudar"]):
-                        params_act["Confianza"] = min(100, params_act["Confianza"] + 15)
-                        params_act["Amistad"] = min(100, params_act["Amisted"] if "Amisted" in params_act else params_act["Amistad"] + 10)
-                        resultado_str = "🛡️ ¡Impacto positivo! Confianza y Amistad aumentaron de forma notable."
-                    elif any(w in act_lower for w in ["atacar", "traicionar", "insultar"]):
-                        params_act["Odio"] = min(100, params_act["Odio"] + 20)
-                        params_act["Confianza"] = max(0, params_act["Confianza"] - 15)
-                        resultado_str = "⚡ ¡Impacto negativo! El Odio creció y la Confianza cayó."
-                    else:
-                        params_act["Amistad"] = min(100, params_act["Amistad"] + 5)
-                        resultado_str = "📈 El evento transcurrió de manera neutral."
-                        
-                    guardar_datos(st.session_state.data)
-                    st.success("¡Acción procesada por el sistema operativo!")
-                    st.write(f"**Resultado:** {resultado_str}")
-                    
-                    st.markdown("#### Nuevos parámetros:")
-                    c1, c2, c3, c4 = st.columns(4)
-                    c1.metric("Romance", params_act["Romance"])
-                    c2.metric("Amistad", params_act["Amistad"])
-                    c3.metric("Confianza", params_act["Confianza"])
-                    c4.metric("Odio", params_act["Odio"])
-                else:
-                    st.warning("Escribe una acción primero.")
+        st.markdown("#### 📱 Selecciona una App del Sistema:")
+        
+        col_a1, col_a2 = st.columns(2)
+        with col_a1:
+            st.markdown("""
+                <div class="app-card">
+                    🎯 <b>App: Entrenamiento / Combate</b>
+                    <p style="font-size: 11px; color: #94a3b8;">Simula batallas o ejercicios de héroe y mide la confianza.</p>
+                </div>
+            """, unsafe_allow_html=True)
+            if st.button("Ejecutar Combate", key="app_combate"):
+                p_ref = st.session_state.data["mundos"][m_app]["personajes"][p_app]["parametros"]
+                p_ref["Confianza"] = min(100, p_ref["Confianza"] + 10)
+                p_ref["Amistad"] = min(100, p_ref["Amistad"] + 5)
+                guardar_datos(st.session_state.data)
+                st.success(f"⚔️ ¡Entrenamiento completado con {p_app}! Confianza y Amistad aumentaron.")
+                st.rerun()
+                
+        with col_a2:
+            st.markdown("""
+                <div class="app-card">
+                    💌 <b>App: Cita / Momento a Solas</b>
+                    <p style="font-size: 11px; color: #94a3b8;">Invita al personaje a un evento fuera de clases.</p>
+                </div>
+            """, unsafe_allow_html=True)
+            if st.button("Invitar a Salir", key="app_cita"):
+                p_ref = st.session_state.data["mundos"][m_app]["personajes"][p_app]["parametros"]
+                p_ref["Romance"] = min(100, p_ref["Romance"] + 12)
+                guardar_datos(st.session_state.data)
+                st.success(f"💖 ¡Compartieron un momento especial! El Romance con {p_app} subió +12.")
+                st.rerun()
 
-st.markdown("---")
-st.caption("Universe Simulator OS - Interfaz Móvil v4.0")
-                        
+# ====================== PESTAÑA 4: CREAR MUNDOS Y PERSONAJES ======================
+elif st.session_state.tab_activa == "Crear":
+    st.markdown("### ⚙️ Creador de Universos y Fichas")
+    
+    opcion = st.radio("¿Qué deseas crear?", ["🌌 Nuevo Universo", "👤 Nuevo Personaje"])
+    
+    if opcion == "🌌 Nuevo Universo":
+        with st.form("form_crear_u"):
+            n_mundo = st.text_input("Nombre del Mundo (ej: My Hero Academia)")
+            lore_u = st.text_area("Lore / Reglas / Contexto del Universo")
+            if st.form_submit_button("Guardar Universo"):
+                if n_mundo and n_mundo not in st.session_state.data["mundos"]:
+                    st.session_state.data["mundos"][n_mundo] = {
+                        "lore": lore_u,
+                        "personajes": {},
+                        "apps": ["Entrenamiento", "Cita", "Diario"]
+                    }
+                    guardar_datos(st.session_state.data)
+                    st.success(f"¡Universo '{n_mundo}' creado exitosamente!")
+                    st.rerun()
+                else:
+                    st.error("Nombre inválido o ya existente.")
+                    
+    elif opcion == "👤 Nuevo Personaje":
+        mundos = list(st.session_state.data["mundos"].keys())
+        if not mundos:
+            st.warning("Crea un mundo primero.")
+        else:
+            m_target = st.selectbox("Asignar al mundo:", mundos)
+            with st.form("form_crear_p"):
+                n_pers = st.text_input("Nombre del Personaje")
+                desc_p = st.text_area("Descripción física, personalidad y Quirk/Poderes")
+                r = st.slider("Romance Inicial", 0, 100, 10)
+                a = st.slider("Amistad Inicial", 0, 100, 20)
+                c = st.slider("Confianza Inicial", 0, 100, 15)
+                o = st.slider("Odio Inicial", 0, 100, 0)
+                
+                if st.form_submit_button("Guardar Personaje"):
+                    if n_pers.strip():
+                        st.session_state.data["mundos"][m_target]["personajes"][n_pers] = {
+                            "descripcion": desc_p,
+                            "parametros": {"Romance": r, "Amistad": a, "Confianza": c, "Odio": o},
+                            "chat": []
+                        }
+                        guardar_datos(st.session_state.data)
+                        st.success(f"¡{n_pers} registrado en {m_target}!")
+                        st.rerun()
