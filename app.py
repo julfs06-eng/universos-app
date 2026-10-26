@@ -1,62 +1,108 @@
 import json
 import os
+import random
 import streamlit as st
 from datetime import datetime
 
+# Configuración de página
 st.set_page_config(
-    page_title="WorldOS Advanced",
-    page_icon="🌌",
+    page_title="WorldOS - Mobile Simulator",
+    page_icon="📱",
     layout="centered",
     initial_sidebar_state="collapsed"
 )
 
-# Estilos avanzados para replicar la interfaz de tarjetas, temas y menús flotantes
+# Estilos CSS avanzados para replicar la experiencia de interfaz estilo celular
 st.markdown("""
     <style>
+    /* Estructura general */
     .stApp {
-        background: #0b0e14 !important;
+        background-color: #0d1117 !important;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        color: #f0f6fc;
     }
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
+    #MainMenu, footer, header { visibility: hidden; }
 
-    /* Contenedor principal estilo móvil */
-    .mobile-frame {
-        background: #111622;
-        border: 1px solid #21262d;
-        border-radius: 24px;
-        padding: 20px;
-        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.8);
-        margin-bottom: 30px;
-    }
-
-    /* Tarjetas de opciones / mundos */
-    .card-box {
+    /* Marco del Smartphone */
+    .phone-screen {
         background: #161b22;
-        border: 1px solid #30363d;
-        border-radius: 16px;
+        border: 2px solid #30363d;
+        border-radius: 32px;
         padding: 16px;
-        margin-bottom: 12px;
-        transition: 0.2s;
-    }
-    .card-box:hover {
-        border-color: #58a6ff;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        margin-bottom: 20px;
     }
 
-    /* Botones de acción general */
+    /* Isla dinámica / Barra superior */
+    .status-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 11px;
+        color: #8b949e;
+        padding: 4px 8px 12px 8px;
+    }
+    .dynamic-island {
+        width: 80px;
+        height: 18px;
+        background: #000;
+        border-radius: 10px;
+    }
+
+    /* Cuadrícula de Apps estilo iPhone/Android */
+    [data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 8px !important;
+    }
+    [data-testid="column"] {
+        width: 25% !important;
+        flex: 1 1 25% !important;
+        min-width: unset !important;
+    }
+
+    /* Botones estilo icono de App */
     div.stButton > button {
+        width: 100% !important;
         background: #21262d !important;
-        color: #e6edf3 !important;
+        color: #f0f6fc !important;
         border: 1px solid #30363d !important;
-        border-radius: 12px !important;
+        border-radius: 18px !important;
+        padding: 12px 2px !important;
+        font-size: 11px !important;
         font-weight: 500 !important;
-        transition: 0.2s;
     }
     div.stButton > button:hover {
-        background: #30363d !important;
         border-color: #58a6ff !important;
+        background: #30363d !important;
+    }
+
+    /* Mensajes de WhatsApp */
+    .chat-msg-user {
+        background: #005c4b;
+        color: #e9edef;
+        padding: 8px 12px;
+        border-radius: 12px 12px 0px 12px;
+        margin: 4px 0 4px auto;
+        max-width: 80%;
+        font-size: 13px;
+    }
+    .chat-msg-bot {
+        background: #202c33;
+        color: #e9edef;
+        padding: 8px 12px;
+        border-radius: 12px 12px 12px 0px;
+        margin: 4px auto 4px 0;
+        max-width: 80%;
+        font-size: 13px;
+    }
+
+    /* Tarjetas de Posts / Twitter / Instagram */
+    .post-box {
+        background: #0d1117;
+        border: 1px solid #30363d;
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 10px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -79,155 +125,151 @@ def guardar_datos(data):
 if "data" not in st.session_state:
     st.session_state.data = cargar_datos()
 
-if "current_view" not in st.session_state:
-    st.session_state.current_view = "explorar"
+if "current_app" not in st.session_state:
+    st.session_state.current_app = "Home"
 
-if "selected_mundo" not in st.session_state:
-    st.session_state.selected_mundo = None
+if "chat_messages" not in st.session_state:
+    st.session_state.chat_messages = [
+        {"sender": "Izuku Midoriya", "text": "¡Hola a todos! ¿Alguien tiene los apuntes del entrenamiento de hoy?"},
+        {"sender": "Katsuki Bakugo", "text": "¡¡¡A NADIE LE IMPORTAN TUS APUNTES DEKU BASTARDO!!!"},
+        {"sender": "Shoto Todoroki", "text": "Los tengo yo. Te los paso por privado."}
+    ]
 
-if "mundo_tab" not in st.session_state:
-    st.session_state.mundo_tab = "Básicos"
+# MARCO MÓVIL
+st.markdown('<div class="phone-screen">', unsafe_allow_html=True)
 
-# ================= VISTA PRINCIPAL: EXPLORAR / MUNDOS =================
-if st.session_state.current_view == "explorar":
-    st.markdown("### 🌌 Mis Mundos")
+# BARRA SUPERIOR
+hora_actual = datetime.now().strftime("%H:%M")
+st.markdown(f'''
+    <div class="status-bar">
+        <span>{hora_actual}</span>
+        <div class="dynamic-island"></div>
+        <span>📶 5G 🔋 100%</span>
+    </div>
+''', unsafe_allow_html=True)
+
+# NAV INFERIOR O BOTÓN DE INICIO
+if st.session_state.current_app != "Home":
+    if st.button("⬅️ Pantalla de Inicio (Home)"):
+        st.session_state.current_app = "Home"
+        st.rerun()
+    st.markdown("---")
+
+# ================= 📱 ESCRITORIO DE APPS (HOME) =================
+if st.session_state.current_app == "Home":
+    st.markdown("<h5 style='text-align: center; color: #8b949e;'>WorldOS - Pantalla Principal</h5>", unsafe_allow_html=True)
     
-    # Barra superior de navegación rápida
-    col_top1, col_top2 = st.columns(2)
-    with col_top1:
-        if st.button("✨ Creados", use_container_width=True):
-            pass
-    with col_top2:
-        if st.button("➕ Crear un mundo", use_container_width=True):
-            st.session_state.current_view = "crear_mundo_paso1"
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        if st.button("💬\nWhatsApp"):
+            st.session_state.current_app = "WhatsApp"
+            st.rerun()
+    with col2:
+        if st.button("📸\nInstagram"):
+            st.session_state.current_app = "Instagram"
+            st.rerun()
+    with col3:
+        if st.button("🐦\nX (Twitter)"):
+            st.session_state.current_app = "Twitter"
+            st.rerun()
+    with col4:
+        if st.button("🤫\nForo"):
+            st.session_state.current_app = "Foro"
             st.rerun()
 
-    st.markdown("---")
+    col5, col6, col7, col8 = st.columns(4)
+    with col5:
+        if st.button("📊\nStats"):
+            st.session_state.current_app = "Stats"
+            st.rerun()
+    with col6:
+        if st.button("🏆\nLogros"):
+            st.session_state.current_app = "Logros"
+            st.rerun()
+    with col7:
+        if st.button("🌌\nMundos"):
+            st.session_state.current_app = "Mundos"
+            st.rerun()
+    with col8:
+        if st.button("⚙️\nAjustes"):
+            st.session_state.current_app = "Ajustes"
+            st.rerun()
 
-    mundos = st.session_state.data.get("mundos", {})
-    if mundos:
-        for nombre_m, info in mundos.items():
-            st.markdown(f"""
-                <div class="card-box">
-                    <h4 style="margin:0; color:#58a6ff;">🌌 {nombre_m}</h4>
-                    <p style="font-size:12px; color:#8b949e; margin:5px 0;">Universo activo con {len(info.get('personajes', {}))} personajes.</p>
-                </div>
-            """, unsafe_allow_html=True)
-            if st.button(f"Abrir {nombre_m}", key=f"btn_{nombre_m}"):
-                st.session_state.selected_mundo = nombre_m
-                st.session_state.current_view = "gestor_mundo"
-                st.rerun()
-    else:
-        st.info("No tienes mundos creados. ¡Empieza creando uno nuevo con el botón de arriba!")
-
-# ================= CREAR UN MUNDO (PASO A PASO) =================
-elif st.session_state.current_view == "crear_mundo_paso1":
-    if st.button("⬅️ Volver"):
-        st.session_state.current_view = "explorar"
-        st.rerun()
-
-    st.markdown("### 🛠️ Crear un mundo")
-    st.caption("Configuración inicial del universo y su estética.")
-
-    nombre_partida = st.text_input("Nombre de la partida / Universo", placeholder="Ej: My Hero Academia")
-    eslogan = st.text_input("Eslogan o descripción corta")
+# ================= 💬 WHATSAPP =================
+elif st.session_state.current_app == "WhatsApp":
+    st.markdown("### 💬 WhatsApp - Clase 1-A")
     
-    st.markdown("##### 🎨 Tema (Skin visual)")
-    tema_seleccionado = st.selectbox(
-        "Skin para la interfaz", 
-        ["Classic (Azul)", "Cyberpunk (Neón)", "Kraft (Madera/Tierra)", "Sakura (Rosa)", "War Room (Militar)"]
-    )
+    for msg in st.session_state.chat_messages:
+        if msg["sender"] == "user":
+            st.markdown(f'<div class="chat-msg-user">{msg["text"]}</div>', unsafe_allow_html=True)
+        else:
+            st.markdown(f'<div class="chat-msg-bot"><b>{msg["sender"]}:</b> {msg["text"]}</div>', unsafe_allow_html=True)
 
-    if st.button("Guardar y Continuar", use_container_width=True):
-        if nombre_partida:
-            if nombre_partida not in st.session_state.data["mundos"]:
-                st.session_state.data["mundos"][nombre_partida] = {
-                    "eslogan": eslogan,
-                    "tema": tema_seleccionado,
-                    "personajes": {},
-                    "apps_instaladas": ["Chat", "Estadísticas", "Historia"]
-                }
-                guardar_datos(st.session_state.data)
-                st.session_state.selected_mundo = nombre_partida
-                st.session_state.current_view = "gestor_mundo"
-                st.rerun()
-            else:
-                st.warning("Este mundo ya existe.")
+    user_text = st.text_input("Escribe un mensaje al grupo...", key="input_wa")
+    if st.button("Enviar"):
+        if user_text:
+            st.session_state.chat_messages.append({"sender": "user", "text": user_text})
+            # Simulación de respuesta en grupo
+            respuestas = [
+                {"sender": "Katsuki Bakugo", "text": "¡¡¡CÁLLATE Y NO DIGAS TONTERÍAS!!!"},
+                {"sender": "Shoto Todoroki", "text": "Coincido con la idea. Hay que mantener la calma."},
+                {"sender": "Mina Ashido", "text": "¡Jajaja esto se está poniendo divertido! 💖"}
+            ]
+            st.session_state.chat_messages.append(random.choice(respuestas))
+            st.rerun()
 
-# ================= GESTOR DEL MUNDO SELECCIONADO =================
-elif st.session_state.current_view == "gestor_mundo":
-    mundo_actual = st.session_state.selected_mundo
-    
-    if st.button("⬅️ Volver a mis mundos"):
-        st.session_state.current_view = "explorar"
-        st.rerun()
+# ================= 📸 INSTAGRAM =================
+elif st.session_state.current_app == "Instagram":
+    st.markdown("### 📸 Instagram Feed")
+    st.markdown('''
+        <div class="post-box">
+            <b>@akaribeaumont</b> • Hace 2h<br>
+            <p style="margin: 8px 0;">Medalla de bronce y el cielo de Musutafu de fondo. Gracias por el apoyo a todos 🥇✨ #FestivalDeportivoUA</p>
+            <span style="color: #f778ba; font-size: 12px;">❤️ 344 Me gusta</span>
+        </div>
+    ''', unsafe_allow_html=True)
 
-    st.markdown(f"## ⚙️ Configurando: {mundo_actual}")
+# ================= 🐦 TWITTER / X =================
+elif st.session_state.current_app == "Twitter":
+    st.markdown("### 🐦 X (Twitter)")
+    st.markdown('''
+        <div class="post-box">
+            <b>Ren Ui</b> <span style="color:#8b949e;">@renui</span><br>
+            <p style="margin: 6px 0;">Si la Clase 1-A hace karaoke después del festival yo pago el boleto. ¡Esto es un caos anunciado! 😭🎤 #FestivalDeportivoUA</p>
+        </div>
+    ''', unsafe_allow_html=True)
 
-    # Pestañas superiores estilo la app de referencia
-    t1, t2, t3 = st.columns(3)
-    with t1:
-        if st.button("📋 Básicos", use_container_width=True):
-            st.session_state.mundo_tab = "Básicos"
-    with t2:
-        if st.button("👤 Personajes", use_container_width=True):
-            st.session_state.mundo_tab = "Personajes"
-    with t3:
-        if st.button("🧩 Apps", use_container_width=True):
-            st.session_state.mundo_tab = "Apps"
+# ================= 🤫 FORO ANÓNIMO =================
+elif st.session_state.current_app == "Foro":
+    st.markdown("### 🤫 Foro Anónimo U.A.")
+    st.markdown('''
+        <div class="post-box">
+            <b>tribuna_norte</b><br>
+            <p style="margin: 4px 0;">¿Alguien más notó que Todoroki no usó el fuego en toda la final?</p>
+        </div>
+    ''', unsafe_allow_html=True)
 
-    st.markdown("---")
+# ================= 📊 ESTADÍSTICAS =================
+elif st.session_state.current_app == "Stats":
+    st.markdown("### 📊 Vínculos & Estadísticas")
+    st.progress(1.0, text="Afecto con Hawks: 100%")
+    st.progress(1.0, text="Confianza con Hawks: 100%")
+    st.progress(0.1, text="Tensión Romántica: 10%")
 
-    # CONTENIDO SEGÚN LA PESTAÑA SELECCIONADA
-    if st.session_state.mundo_tab == "Básicos":
-        st.markdown("#### 📝 Ajustes Básicos")
-        info_mundo = st.session_state.data["mundos"][mundo_actual]
-        nuevo_eslogan = st.text_input("Eslogan", value=info_mundo.get("eslogan", ""))
-        if st.button("Actualizar Cambios"):
-            info_mundo["eslogan"] = nuevo_eslogan
-            guardar_datos(st.session_state.data)
-            st.success("¡Actualizado con éxito!")
+# ================= 🏆 LOGROS =================
+elif st.session_state.current_app == "Logros":
+    st.markdown("### 🏆 Logros Desbloqueados")
+    st.success("🥇 ¡Héroe número uno! - Desbloqueado")
+    st.success("🤝 ¡Nuevos amigos! - Desbloqueado")
 
-    elif st.session_state.mundo_tab == "Personajes":
-        st.markdown("#### 👥 Personajes del Universo")
-        info_mundo = st.session_state.data["mundos"][mundo_actual]
-        
-        p_nombre = st.text_input("Nombre del personaje")
-        p_rol = st.text_input("Rol / Descripción")
-        if st.button("+ Agregar personaje"):
-            if p_nombre:
-                info_mundo["personajes"][p_nombre] = {"rol": p_rol, "romance": 50, "amistad": 50}
-                guardar_datos(st.session_state.data)
-                st.success(f"¡Personaje {p_nombre} añadido!")
+# ================= 🌌 MUNDOS =================
+elif st.session_state.current_app == "Mundos":
+    st.markdown("### 🌌 Gestor de Mundos")
+    st.info("Mundo Activo: My Hero Academia")
 
-        st.markdown("--- *Personajes actuales:*")
-        for p, details in info_mundo.get("personajes", {}).items():
-            st.markdown(f"- **{p}**: {details.get('rol', 'Sin rol')}")
+# ================= ⚙️ AJUSTES =================
+elif st.session_state.current_app == "Ajustes":
+    st.markdown("### ⚙️ Ajustes del Sistema")
+    st.text_input("Nombre de usuario", value="Fresita---666")
 
-    elif st.session_state.mundo_tab == "Apps":
-        st.markdown("#### 🧩 Apps Instaladas en este Mundo")
-        info_mundo = st.session_state.data["mundos"][mundo_actual]
-        
-        apps_actuales = info_mundo.get("apps_instaladas", [])
-        for app in apps_actuales:
-            st.markdown(f"""
-                <div class="card-box" style="display:flex; justify-content:space-between; align-items:center;">
-                    <span>📱 <b>{app}</b> (Activa)</span>
-                </div>
-            """, unsafe_allow_html=True)
-            
-        st.info("Pronto podrás instalar más apps personalizadas como Worldgram, mapas o registros de misiones.")
-
-# Barra inferior flotante fija de navegación general
-st.markdown("---")
-col_b1, col_b2, col_b3 = st.columns(3)
-with col_b1:
-    if st.button("🌐 Explorar", use_container_width=True):
-        st.session_state.current_view = "explorar"
-        st.rerun()
-with col_b2:
-    if st.button("💬 Historial", use_container_width=True):
-        pass
-with col_b3:
-    if st.button("👤 Perfil", use_container_width=True):
-        pass
+st.markdown('</div>', unsafe_allow_html=True)
