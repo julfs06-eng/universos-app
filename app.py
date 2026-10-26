@@ -1,44 +1,99 @@
- 
 import json
 import os
-import random
 import streamlit as st
 from datetime import datetime
 
 st.set_page_config(
-    page_title="Universe Simulator OS",
-    page_icon="🌌",
-    layout="centered"
+    page_title="WorldOS Mobile",
+    page_icon="📱",
+    layout="centered",
+    initial_sidebar_state="collapsed"
 )
 
-# Estilo visual avanzado: Interfaz de teléfono / Cyber-OS con efecto glassmorphism
+# Estilo visual Cyber-OS / Glassmorphism
 st.markdown("""
     <style>
-    .main {
-        background-color: #050508;
-        color: #f0f6fc;
-    }
+    /* Reset y fondo general */
     .stApp {
-        background: radial-gradient(circle at center, #11141d 0%, #050508 100%);
+        background: #090a0f !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
-    .phone-container {
-        background-color: rgba(13, 17, 23, 0.85);
-        border: 2px solid #30363d;
+
+    /* Ocultar elementos nativos innecesarios de Streamlit */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+
+    /* Contenedor principal de la pantalla del celular */
+    .mobile-frame {
+        background: rgba(18, 22, 34, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 28px;
-        padding: 25px;
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
-        backdrop-filter: blur(10px);
-        margin-bottom: 20px;
+        padding: 20px 15px;
+        backdrop-filter: blur(15px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+        margin-bottom: 25px;
     }
-    .os-header {
+
+    /* Barra de estado superior */
+    .status-bar {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        font-size: 12px;
+        font-size: 11px;
         color: #8b949e;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         margin-bottom: 15px;
-        border-bottom: 1px solid #21262d;
-        padding-bottom: 8px;
+    }
+
+    /* Estilo para los botones tipo Iconos de Apps */
+    div.stButton > button {
+        width: 100% !important;
+        background: linear-gradient(145deg, #161b26, #0f121a) !important;
+        color: #e6edf3 !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 18px !important;
+        padding: 12px 6px !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+        transition: all 0.2s ease !important;
+    }
+    div.stButton > button:hover {
+        border-color: #58a6ff !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 16px rgba(88, 166, 255, 0.25) !important;
+    }
+
+    /* Burbujas de Chat */
+    .chat-bubble-user {
+        background: #1f6feb;
+        color: white;
+        padding: 10px 14px;
+        border-radius: 16px 16px 2px 16px;
+        margin: 6px 0 6px auto;
+        max-width: 80%;
+        font-size: 14px;
+    }
+    .chat-bubble-bot {
+        background: #21262d;
+        color: #e6edf3;
+        border: 1px solid #30363d;
+        padding: 10px 14px;
+        border-radius: 16px 16px 16px 2px;
+        margin: 6px auto 6px 0;
+        max-width: 80%;
+        font-size: 14px;
+    }
+
+    /* Targetas para Feed / Instagram */
+    .post-card {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 16px;
+        padding: 12px;
+        margin-bottom: 15px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -64,152 +119,161 @@ if "data" not in st.session_state:
 if "current_app" not in st.session_state:
     st.session_state.current_app = "Home"
 
-# Contenedor estilo carcasa de celular
-with st.container():
-    st.markdown('<div class="phone-container">', unsafe_allow_html=True)
-    
-    # Barra superior de estado
-    col_s1, col_s2, col_s3 = st.columns([2, 4, 2])
-    with col_s1:
-        st.caption("📶 5G  🔋 100%")
-    with col_s2:
-        st.markdown("<p style='text-align: center; margin: 0; font-size: 13px; font-weight: bold; color: #58a6ff;'>WORLD OS</p>", unsafe_allow_html=True)
-    with col_s3:
-        current_time = datetime.now().strftime("%H:%M")
-        st.caption(f"🕒 {current_time}")
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 
-    st.markdown("---")
+# --- MARCO DEL CELULAR ---
+st.markdown('<div class="mobile-frame">', unsafe_allow_html=True)
 
-    # ================= PANTALLA DE INICIO (HOME / ESCRITORIO DE APPS) =================
-    if st.session_state.current_app == "Home":
-        st.markdown("#### 📱 Escritorio")
-        st.caption("Toca una aplicación para abrirla:")
+# Barra de estado
+hora_actual = datetime.now().strftime("%H:%M")
+st.markdown(f'''
+    <div class="status-bar">
+        <span>📶 5G</span>
+        <span style="color: #58a6ff; font-weight: bold; font-size: 13px;">WORLD OS</span>
+        <span>🕒 {hora_actual} | 🔋 100%</span>
+    </div>
+''', unsafe_allow_html=True)
 
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            if st.button("🌌\nMundos", use_container_width=True):
-                st.session_state.current_app = "Crear Mundo"
-                st.rerun()
-        with c2:
-            if st.button("👤\nPersonajes", use_container_width=True):
-                st.session_state.current_app = "Crear Personaje"
-                st.rerun()
-        with c3:
-            if st.button("📊\nEstadísticas", use_container_width=True):
-                st.session_state.current_app = "Estadísticas"
-                st.rerun()
+# ================= 📱 ESCRITORIO (HOME) =================
+if st.session_state.current_app == "Home":
+    st.markdown("<h4 style='text-align: center; color: #f0f6fc; margin-bottom: 15px;'>📱 WorldOS Desktop</h4>", unsafe_allow_html=True)
 
-        c4, c5, c6 = st.columns(3)
-        with c4:
-            if st.button("💬\nChat IA", use_container_width=True):
-                st.session_state.current_app = "Chat Inmersivo"
-                st.rerun()
-        with c5:
-            if st.button("📸\nRedes", use_container_width=True):
-                st.session_state.current_app = "Redes Sociales"
-                st.rerun()
-        with c6:
-            if st.button("⚡\nEventos", use_container_width=True):
-                st.session_state.current_app = "Acción"
-                st.rerun()
-
-    # ================= MÓDULO: CREAR MUNDO =================
-    elif st.session_state.current_app == "Crear Mundo":
-        if st.button("⬅️ Volver al Escritorio"):
-            st.session_state.current_app = "Home"
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        if st.button("🌌\nMundos"):
+            st.session_state.current_app = "Crear Mundo"
             st.rerun()
-        
-        st.markdown("### 🌌 Gestor de Universos")
-        nombre_mundo = st.text_input("Nombre del Universo / Fandom (Ej: My Hero Academia)")
-        if st.button("Crear Universo"):
-            if nombre_mundo:
-                if nombre_mundo not in st.session_state.data["mundos"]:
-                    st.session_state.data["mundos"][nombre_mundo] = {"personajes": {}, "historia": []}
-                    guardar_datos(st.session_state.data)
-                    st.success(f"¡Universo '{nombre_mundo}' registrado!")
-                else:
-                    st.warning("Este universo ya existe.")
-
-    # ================= MÓDULO: CREAR PERSONAJE =================
-    elif st.session_state.current_app == "Crear Personaje":
-        if st.button("⬅️ Volver al Escritorio"):
-            st.session_state.current_app = "Home"
+        if st.button("💬\nChat IA"):
+            st.session_state.current_app = "Chat Inmersivo"
             st.rerun()
-            
-        st.markdown("### 👤 Registro de Personajes")
-        mundos_disponibles = list(st.session_state.data.get("mundos", {}).keys())
-        
-        if mundos_disponibles:
-            m_sel = st.selectbox("Seleccionar Universo", mundos_disponibles)
-            p_nombre = st.text_input("Nombre del Personaje (Ej: Shoto Todoroki)")
-            p_rol = st.text_input("Rol (Ej: Estudiante / Héroe)")
-            
-            if st.button("Guardar Personaje"):
-                if p_nombre:
-                    st.session_state.data["mundos"][m_sel]["personajes"][p_nombre] = {
-                        "rol": p_rol,
-                        "romance": 40,
-                        "amistad": 55,
-                        "confianza": 60,
-                        "odio": 5
-                    }
-                    guardar_datos(st.session_state.data)
-                    st.success(f"¡{p_nombre} añadido con éxito!")
-        else:
-            st.warning("Primero crea un universo en la app de Mundos.")
 
-    # ================= MÓDULO: ESTADÍSTICAS =================
-    elif st.session_state.current_app == "Estadísticas":
-        if st.button("⬅️ Volver al Escritorio"):
-            st.session_state.current_app = "Home"
+    with col2:
+        if st.button("👤\nPersonajes"):
+            st.session_state.current_app = "Crear Personaje"
             st.rerun()
-            
-        st.markdown("### 📊 Panel de Relaciones")
-        mundos_disponibles = list(st.session_state.data.get("mundos", {}).keys())
-        
-        if mundos_disponibles:
-            m_sel = st.selectbox("Ver Universo", mundos_disponibles, key="stat_mundo")
-            personajes = st.session_state.data["mundos"][m_sel].get("personajes", {})
-            
-            if personajes:
-                p_sel = st.selectbox("Seleccionar Personaje", list(personajes.keys()), key="stat_pj")
-                stats = personajes[p_sel]
-                
-                st.markdown(f"**Vínculos con {p_sel}:**")
-                st.progress(stats.get("romance", 50) / 100, text=f"Romance: {stats.get('romance', 50)}%")
-                st.progress(stats.get("amistad", 50) / 100, text=f"Amistad: {stats.get('amistad', 50)}%")
-                st.progress(stats.get("confianza", 50) / 100, text=f"Confianza: {stats.get('confianza', 50)}%")
-                st.progress(stats.get("odio", 0) / 100, text=f"Odio: {stats.get('odio', 0)}%")
+        if st.button("📸\nWorldgram"):
+            st.session_state.current_app = "Redes Sociales"
+            st.rerun()
+
+    with col3:
+        if st.button("📊\nStats"):
+            st.session_state.current_app = "Estadísticas"
+            st.rerun()
+        if st.button("⚡\nEventos"):
+            st.session_state.current_app = "Acción"
+            st.rerun()
+
+# ================= 🌌 CREAR MUNDO =================
+elif st.session_state.current_app == "Crear Mundo":
+    if st.button("⬅️ Inicio"):
+        st.session_state.current_app = "Home"
+        st.rerun()
+    st.markdown("### 🌌 Crear Universo")
+    nombre_mundo = st.text_input("Nombre del Universo (Ej: My Hero Academia)")
+    if st.button("Guardar Universo"):
+        if nombre_mundo:
+            if nombre_mundo not in st.session_state.data["mundos"]:
+                st.session_state.data["mundos"][nombre_mundo] = {"personajes": {}, "historia": []}
+                guardar_datos(st.session_state.data)
+                st.success(f"¡Universo '{nombre_mundo}' guardado!")
             else:
-                st.info("Aún no hay personajes en este mundo.")
+                st.warning("Ese universo ya existe.")
+
+# ================= 👤 CREAR PERSONAJE =================
+elif st.session_state.current_app == "Crear Personaje":
+    if st.button("⬅️ Inicio"):
+        st.session_state.current_app = "Home"
+        st.rerun()
+    st.markdown("### 👤 Registrar Personaje")
+    mundos = list(st.session_state.data.get("mundos", {}).keys())
+    if mundos:
+        m_sel = st.selectbox("Universo", mundos)
+        p_nom = st.text_input("Nombre (Ej: Shoto Todoroki)")
+        p_rol = st.text_input("Rol / Descripción (Ej: Estudiante 1-A)")
+        if st.button("Guardar Personaje"):
+            if p_nom:
+                st.session_state.data["mundos"][m_sel]["personajes"][p_nom] = {
+                    "rol": p_rol,
+                    "romance": 40,
+                    "amistad": 55,
+                    "confianza": 60,
+                    "odio": 5
+                }
+                guardar_datos(st.session_state.data)
+                st.success(f"¡{p_nom} registrado!")
+    else:
+        st.info("Primero crea un universo.")
+
+# ================= 📊 ESTADÍSTICAS =================
+elif st.session_state.current_app == "Estadísticas":
+    if st.button("⬅️ Inicio"):
+        st.session_state.current_app = "Home"
+        st.rerun()
+    st.markdown("### 📊 Panel de Vínculos")
+    mundos = list(st.session_state.data.get("mundos", {}).keys())
+    if mundos:
+        m_sel = st.selectbox("Universo", mundos)
+        pjs = st.session_state.data["mundos"][m_sel].get("personajes", {})
+        if pjs:
+            p_sel = st.selectbox("Personaje", list(pjs.keys()))
+            st = pjs[p_sel]
+            st.write(f"**Relación con {p_sel}:**")
+            st.progress(st.get("romance", 50)/100, text=f"❤️ Romance: {st.get('romance', 50)}%")
+            st.progress(st.get("amistad", 50)/100, text=f"🤝 Amistad: {st.get('amistad', 50)}%")
+            st.progress(st.get("confianza", 50)/100, text=f"🛡️ Confianza: {st.get('confianza', 50)}%")
+            st.progress(st.get("odio", 0)/100, text=f"🔥 Odio: {st.get('odio', 0)}%")
         else:
-            st.warning("No hay universos registrados.")
+            st.info("No hay personajes creados aquí.")
 
-    # ================= MÓDULO: CHAT INMERSIVO =================
-    elif st.session_state.current_app == "Chat Inmersivo":
-        if st.button("⬅️ Volver al Escritorio"):
-            st.session_state.current_app = "Home"
+# ================= 💬 CHAT INMERSIVO =================
+elif st.session_state.current_app == "Chat Inmersivo":
+    if st.button("⬅️ Inicio"):
+        st.session_state.current_app = "Home"
+        st.rerun()
+    st.markdown("### 💬 Chat Directo")
+    
+    # Historial simulado estilo mensajería
+    for msg in st.session_state.chat_history:
+        if msg["sender"] == "user":
+            st.markdown(f'<div class="chat-bubble-user">{msg["text"]}</div>', unsafe_allow_html=True)
+        else:
+            st.markdown(f'<div class="chat-bubble-bot"><b>{msg["sender"]}:</b> {msg["text"]}</div>', unsafe_allow_html=True)
+
+    user_text = st.text_input("Escribe tu mensaje...", key="chat_input")
+    if st.button("Enviar"):
+        if user_text:
+            st.session_state.chat_history.append({"sender": "user", "text": user_text})
+            # Respuesta automatizada simulada
+            st.session_state.chat_history.append({"sender": "Shoto Todoroki", "text": "Entiendo lo que dices... Seguiré entrenando duro en la U.A."})
             st.rerun()
-            
-        st.markdown("### 💬 Mensajes (Chat)")
-        st.info("Aquí conversarán tus personajes basándose en el nivel de tus estadísticas.")
 
-    # ================= MÓDULO: REDES SOCIALES =================
-    elif st.session_state.current_app == "Redes Sociales":
-        if st.button("⬅️ Volver al Escritorio"):
-            st.session_state.current_app = "Home"
-            st.rerun()
-            
-        st.markdown("### 📸 Worldgram (Feed)")
-        st.info("Aquí aparecerán las publicaciones y estados de los personajes de tus fandoms.")
+# ================= 📸 REDES SOCIALES (WORLDGRAM) =================
+elif st.session_state.current_app == "Redes Sociales":
+    if st.button("⬅️ Inicio"):
+        st.session_state.current_app = "Home"
+        st.rerun()
+    st.markdown("### 📸 Worldgram Feed")
+    
+    st.markdown('''
+        <div class="post-card">
+            <b style="color: #58a6ff;">@shoto_official</b> <span style="font-size: 11px; color: #8b949e;">• Hace 2h</span>
+            <p style="margin: 8px 0; font-size: 13px;">El entrenamiento de hoy con Midoriya y Bakugo estuvo intenso. Toca descansar un poco.</p>
+            <span style="font-size: 12px; color: #f778ba;">❤️ 1,240 Me gusta</span>
+        </div>
+        <div class="post-card">
+            <b style="color: #58a6ff;">@bakugo_dynamight</b> <span style="font-size: 11px; color: #8b949e;">• Hace 5h</span>
+            <p style="margin: 8px 0; font-size: 13px;">¡¡¡NO SE METAN EN MI CAMINO SI NO QUIEREN TERMINAR EXPLOTADOS!!! 💥💥</p>
+            <span style="font-size: 12px; color: #f778ba;">❤️ 3,890 Me gusta</span>
+        </div>
+    ''', unsafe_allow_html=True)
 
-    # ================= MÓDULO: ACCIÓN / EVENTO =================
-    elif st.session_state.current_app == "Acción":
-        if st.button("⬅️ Volver al Escritorio"):
-            st.session_state.current_app = "Home"
-            st.rerun()
-            
-        st.markdown("### ⚡ Eventos del Lore")
-        st.info("Dispara eventos que alterarán el destino de tus personajes.")
+# ================= ⚡ EVENTOS =================
+elif st.session_state.current_app == "Acción":
+    if st.button("⬅️ Inicio"):
+        st.session_state.current_app = "Home"
+        st.rerun()
+    st.markdown("### ⚡ Eventos del Lore")
+    st.info("Dispara eventos aleatorios que alteran tus estadísticas.")
 
-    st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
