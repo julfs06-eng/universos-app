@@ -674,4 +674,86 @@ elif pagina == "Chats":
                 rol_visual = "assistant"
 
             with st.chat_message(rol_visual):
+
+                st.write(mensaje.get("text", ""))
+
+        nuevo_mensaje = st.chat_input(
+            f"Escribe a {elegido}...",
+            key=f"chat_input_{mundo['id']}_{elegido}"
+        )
+
+        if nuevo_mensaje:
+            mensajes.append({
+                "role": "user",
+                "text": nuevo_mensaje
+            })
+
+            respuesta = responder_con_gemini(
+                mundo=mundo,
+                personaje=personaje,
+                mensajes=mensajes,
+                mensaje_usuario=nuevo_mensaje
+            )
+
+            mensajes.append({
+                "role": "assistant",
+                "text": respuesta
+            })
+
+            guardar_y_avisar()
+            st.rerun()
+
+
+# ---------- AJUSTES Y APLICACIONES ----------
+elif pagina == "Apps":
+    st.title("⚙️ Aplicaciones y ajustes")
+    mundo = obtener_mundo()
+
+    if not mundo:
+        st.info("Selecciona un mundo primero.")
+    else:
+        st.markdown("### 🌌 " + mundo.get("nombre", "Mi mundo"))
+        st.write(mundo.get("descripcion", ""))
+
+        opciones_apps = [
+            "Historias", "Personajes", "Chats",
+            "Diario", "Misiones", "Galería"
+        ]
+
+        apps = st.multiselect(
+            "Aplicaciones instaladas",
+            opciones_apps,
+            default=mundo.get("apps", []),
+            key=f"apps_config_{mundo['id']}"
+        )
+
+        instrucciones = st.text_area(
+            "Instrucciones del universo",
+            value=mundo.get("instrucciones", ""),
+            key=f"instrucciones_{mundo['id']}"
+        )
+
+        if st.button("💾 Guardar configuración"):
+            mundo["apps"] = apps
+            mundo["instrucciones"] = instrucciones
+            guardar_y_avisar()
+            st.success("Configuración actualizada.")
+
+        st.markdown("### 🎭 Personajes")
+
+        for personaje in mundo.get("personajes", []):
+            with st.container(border=True):
+                st.markdown(
+                    f"**{personaje.get('nombre', 'Personaje')}** · "
+                    f"{personaje.get('rol', 'Personaje')}"
+                )
+                st.write(personaje.get("personalidad", ""))
+
+
+st.divider()
+st.caption(
+    "UNIVERSE OS · Prototipo en desarrollo. "
+    "Los chats usan Gemini cuando la API está configurada."
+)
+
               
