@@ -1,9 +1,9 @@
 
-import streamlit as st
 import json
 import os
-import random
 import uuid
+import random
+import streamlit as st
 
 st.set_page_config(
     page_title="Universe OS",
@@ -14,7 +14,7 @@ st.set_page_config(
 
 DB_FILE = "universos.json"
 
-# ---------- ESTILO ----------
+# ---------- DISEÑO ----------
 st.markdown("""
 <style>
 .stApp {
@@ -26,29 +26,17 @@ header[data-testid="stHeader"] {
 }
 .block-container {
     max-width: 1050px;
-    padding: 1.5rem 1rem 4rem;
+    padding: 1.3rem 1rem 4rem;
 }
 h1, h2, h3, p, label {
     color: #f3f3ff;
 }
 .hero {
-    background: linear-gradient(135deg,#27265b,#111426 75%);
+    background: linear-gradient(135deg, #29265d, #111426);
     border: 1px solid #6556db;
-    border-radius: 24px;
-    padding: 25px;
-    margin: 12px 0 22px;
-}
-.panel {
-    background: #111525;
-    border: 1px solid #29314c;
-    border-radius: 18px;
-    padding: 17px;
-    margin: 8px 0;
-}
-.small {
-    color: #a9b3da;
-    font-size: 12px;
-    letter-spacing: 1px;
+    border-radius: 22px;
+    padding: 24px;
+    margin: 14px 0 22px;
 }
 .stButton > button,
 .stFormSubmitButton > button {
@@ -58,6 +46,7 @@ h1, h2, h3, p, label {
     border-radius: 12px;
     min-height: 42px;
     width: 100%;
+    font-weight: 600;
 }
 .stButton > button:hover,
 .stFormSubmitButton > button:hover {
@@ -76,39 +65,50 @@ hr {
 </style>
 """, unsafe_allow_html=True)
 
-# ---------- ESTADO Y DATOS ----------
+
+# ---------- DATOS ----------
+def mundos_iniciales():
+    return [{
+        "id": "mha-demo",
+        "nombre": "My Hero Academia",
+        "descripcion": "Una academia de héroes, nuevos amigos y poderes extraordinarios.",
+        "genero": "Anime / Aventura",
+        "personajes": [
+            {
+                "id": str(uuid.uuid4()),
+                "nombre": "Aizawa",
+                "rol": "Profesor",
+                "personalidad": "Serio, observador y exigente."
+            }
+        ],
+        "inicio": "Tu primer día en la academia",
+        "escena": "Llegas a la academia. Una nueva aventura está a punto de comenzar.",
+        "instrucciones": "Mantén la personalidad de cada personaje.",
+        "apps": ["Historias", "Personajes", "Chats"],
+        "historia": [
+            "Llegas a la academia. Una nueva etapa de tu vida comienza."
+        ],
+        "chats": {}
+    }]
+
+
 def cargar_mundos():
     if os.path.exists(DB_FILE):
         try:
-            with open(DB_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except (json.JSONDecodeError, OSError):
+            with open(DB_FILE, "r", encoding="utf-8") as archivo:
+                datos = json.load(archivo)
+            if isinstance(datos, list):
+                return datos
+        except (OSError, json.JSONDecodeError):
             pass
-    return [
-        {
-            "id": "demo_mha",
-            "nombre": "My Hero Academia",
-            "descripcion": "Una academia de héroes y poderes extraordinarios.",
-            "genero": "Anime / Aventura",
-            "personajes": [
-                {"nombre": "Aizawa", "rol": "Profesor", "personalidad": "Serio y observador"}
-            ],
-            "inicio": "Tu primer día en la academia",
-            "instrucciones": "Respeta la personalidad de cada personaje.",
-            "apps": ["Historias", "Personajes", "Chats"],
-            "historia": [
-                "Llegas a la academia. Una nueva etapa de tu vida está a punto de comenzar."
-            ],
-            "chats": {},
-        }
-    ]
+    return mundos_iniciales()
 
 
 if "mundos" not in st.session_state:
     st.session_state.mundos = cargar_mundos()
 
-if "nav" not in st.session_state:
-    st.session_state.nav = "Inicio"
+if "pagina" not in st.session_state:
+    st.session_state.pagina = "Inicio"
 
 if "mundo_id" not in st.session_state:
     st.session_state.mundo_id = st.session_state.mundos[0]["id"]
@@ -123,155 +123,187 @@ if "personajes_draft" not in st.session_state:
     st.session_state.personajes_draft = []
 
 
+# ---------- FUNCIONES ----------
 def guardar_mundos():
     try:
-        with open(DB_FILE, "w", encoding="utf-8") as f:
+        with open(DB_FILE, "w", encoding="utf-8") as archivo:
             json.dump(
                 st.session_state.mundos,
-                f,
+                archivo,
                 ensure_ascii=False,
                 indent=2,
             )
         return True
-    except OSError:
+    except (OSError, TypeError):
         return False
 
 
-def avisar_guardado():
+def guardar_y_avisar():
     if not guardar_mundos():
         st.warning(
-            "No se pudo guardar el archivo local. "
-            "Descarga o copia tus datos importantes."
+            "No se pudieron guardar los datos en el archivo local. "
+            "El almacenamiento de Streamlit Cloud puede no ser permanente."
         )
 
 
-def mundo_actual():
-    for m in st.session_state.mundos:
-        if m["id"] == st.session_state.mundo_id:
-            return m
-    return None
-
-
-def ir(pagina):
-    st.session_state.nav = pagina
+def ir_a(pagina):
+    # 'pagina' es estado normal, NO la clave de un widget.
+    st.session_state.pagina = pagina
     st.rerun()
 
 
-def abrir_mundo(m):
-    st.session_state.mundo_id = m["id"]
-    ir("Historia")
+def obtener_mundo(mundo_id=None):
+    buscado = mundo_id or st.session_state.mundo_id
+    for mundo in st.session_state.mundos:
+        if mundo.get("id") == buscado:
+            return mundo
+    return None
 
 
-def tarjeta_mundo(m, prefijo):
+def abrir_mundo(mundo):
+    st.session_state.mundo_id = mundo["id"]
+    if not mundo.get("historia"):
+        mundo["historia"] = [
+            mundo.get("escena") or "Tu aventura acaba de comenzar."
+        ]
+    ir_a("Historia")
+
+
+def preparar_creador():
+    st.session_state.paso = 0
+    st.session_state.borrador = {}
+    st.session_state.personajes_draft = []
+    ir_a("Crear mundo")
+
+
+def tarjeta_mundo(mundo, prefijo):
     with st.container(border=True):
-        st.markdown(f"### 🌌 {m['nombre']}")
-        st.caption(m["genero"])
-        st.write(m["descripcion"])
+        st.markdown("### 🌌 " + mundo["nombre"])
+        st.caption(mundo.get("genero", "Sin género"))
+        st.write(mundo.get("descripcion", "Sin descripción"))
+
         c1, c2 = st.columns(2)
         with c1:
-            if st.button("▶ Abrir", key=f"{prefijo}_open_{m['id']}"):
-                abrir_mundo(m)
+            if st.button(
+                "▶ Abrir",
+                key=f"{prefijo}_abrir_{mundo['id']}",
+            ):
+                abrir_mundo(mundo)
         with c2:
-            if st.button("⚙ Configurar", key=f"{prefijo}_edit_{m['id']}"):
-                st.session_state.mundo_id = m["id"]
-                ir("Apps")
+            if st.button(
+                "⚙ Configurar",
+                key=f"{prefijo}_config_{mundo['id']}",
+            ):
+                st.session_state.mundo_id = mundo["id"]
+                ir_a("Apps")
 
 
-# ---------- CABECERA ----------
+# ---------- CABECERA Y NAVEGACIÓN ----------
 st.markdown("# 🌌 Universe OS")
 st.caption("Crea universos. Diseña personajes. Vive historias.")
 
-paginas = ["Inicio", "Mundos", "Crear mundo", "Historia", "Chats", "Apps"]
-st.radio(
-    "Navegación",
-    paginas,
-    horizontal=True,
-    key="nav",
-    label_visibility="collapsed",
-)
+paginas = [
+    ("🏠 Inicio", "Inicio"),
+    ("🪐 Mundos", "Mundos"),
+    ("✨ Crear", "Crear mundo"),
+    ("📖 Historia", "Historia"),
+    ("💬 Chats", "Chats"),
+    ("⚙️ Apps", "Apps"),
+]
+
+# Botones independientes: evita el error de estado del st.radio.
+columnas = st.columns(6)
+for indice, (etiqueta, destino) in enumerate(paginas):
+    with columnas[indice]:
+        if st.button(
+            etiqueta,
+            key=f"navegacion_{indice}",
+            use_container_width=True,
+        ):
+            st.session_state.pagina = destino
+            st.rerun()
+
+st.divider()
+pagina = st.session_state.pagina
+
 
 # ---------- INICIO ----------
-if st.session_state.nav == "Inicio":
+if pagina == "Inicio":
     st.markdown("""
     <div class="hero">
-      <div class="small">TU UNIVERSO PERSONAL</div>
-      <h1>¿Qué historia vas a crear?</h1>
-      <p>Un espacio para construir mundos, personajes y aventuras.</p>
+      <p>✦ TU ESPACIO CREATIVO</p>
+      <h1>¿Qué historia vivirás hoy?</h1>
+      <p>Construye mundos, crea personajes y explora nuevas aventuras.</p>
     </div>
     """, unsafe_allow_html=True)
 
-    a, b, c = st.columns(3)
+    a, b = st.columns(2)
     with a:
-        if st.button("✨ Crear mundo"):
-            st.session_state.paso = 0
-            st.session_state.borrador = {}
-            st.session_state.personajes_draft = []
-            ir("Crear mundo")
+        if st.button("✨ Crear un universo", key="inicio_crear"):
+            preparar_creador()
     with b:
-        if st.button("📚 Mis mundos"):
-            ir("Mundos")
-    with c:
-        if st.button("💬 Conversaciones"):
-            ir("Chats")
+        if st.button("🪐 Ver todos mis mundos", key="inicio_mundos"):
+            ir_a("Mundos")
 
-    st.markdown("## ✦ Continuar explorando")
-    for m in st.session_state.mundos:
-        tarjeta_mundo(m, "home")
+    st.markdown("## ✦ Tus universos")
+    if not st.session_state.mundos:
+        st.info("Aún no tienes mundos. Crea tu primer universo.")
+    for mundo in st.session_state.mundos:
+        tarjeta_mundo(mundo, "inicio")
+
 
 # ---------- MUNDOS ----------
-elif st.session_state.nav == "Mundos":
+elif pagina == "Mundos":
     st.title("🪐 Mis mundos")
-    if st.button("＋ Crear un universo"):
-        st.session_state.paso = 0
-        st.session_state.borrador = {}
-        st.session_state.personajes_draft = []
-        ir("Crear mundo")
 
-    if not st.session_state.mundos:
-        st.info("Todavía no hay mundos creados.")
-    for m in st.session_state.mundos:
-        tarjeta_mundo(m, "worlds")
+    if st.button("＋ Crear un mundo", key="mundos_crear"):
+        preparar_creador()
 
-# ---------- ASISTENTE DE CREACIÓN ----------
-elif st.session_state.nav == "Crear mundo":
-    st.title("✨ Crear un mundo")
+    for mundo in st.session_state.mundos:
+        tarjeta_mundo(mundo, "lista")
 
-    pasos = [
-        "1. Básicos",
-        "2. Personajes",
-        "3. Inicio",
-        "4. Apps",
-        "5. Instrucciones",
+
+# ---------- CREADOR POR PASOS ----------
+elif pagina == "Crear mundo":
+    st.title("✨ Crear un universo")
+
+    nombres_pasos = [
+        "Básicos", "Personajes", "Inicio", "Apps", "Instrucciones"
     ]
-    st.progress((st.session_state.paso + 1) / len(pasos))
-    st.caption("  /  ".join(pasos))
     paso = st.session_state.paso
-    d = st.session_state.borrador
+    borrador = st.session_state.borrador
+
+    st.progress((paso + 1) / len(nombres_pasos))
+    st.caption(f"Paso {paso + 1} de 5 · {nombres_pasos[paso]}")
 
     if paso == 0:
-        st.subheader("🌍 Los datos de tu universo")
-        with st.form("basicos"):
+        st.subheader("🌍 Datos básicos")
+
+        with st.form("form_basicos"):
             nombre = st.text_input(
                 "Nombre del mundo",
-                value=d.get("nombre", ""),
+                value=borrador.get("nombre", ""),
             )
             descripcion = st.text_area(
-                "¿De qué trata?",
-                value=d.get("descripcion", ""),
+                "Descripción",
+                value=borrador.get("descripcion", ""),
             )
             genero = st.selectbox(
                 "Género",
-                ["Anime", "Fantasía", "Aventura", "Drama",
-                 "Misterio", "Ciencia ficción", "Vida cotidiana",
-                 "Romance", "Otro"],
+                [
+                    "Anime", "Fantasía", "Aventura", "Drama",
+                    "Misterio", "Ciencia ficción", "Romance",
+                    "Vida cotidiana", "Otro"
+                ],
                 index=0,
             )
-            ok = st.form_submit_button("Siguiente →")
-        if ok:
+            siguiente = st.form_submit_button("Siguiente →")
+
+        if siguiente:
             if not nombre.strip():
-                st.warning("Ponle un nombre al mundo.")
+                st.warning("Escribe el nombre de tu mundo.")
             else:
-                d.update({
+                borrador.update({
                     "nombre": nombre.strip(),
                     "descripcion": descripcion.strip(),
                     "genero": genero,
@@ -280,231 +312,254 @@ elif st.session_state.nav == "Crear mundo":
                 st.rerun()
 
     elif paso == 1:
-        st.subheader("🎭 Diseña tus personajes")
-        st.write("Puedes añadir varios personajes a tu universo.")
+        st.subheader("🎭 Personajes")
 
-        with st.form("personaje_nuevo", clear_on_submit=True):
+        with st.form("form_personaje", clear_on_submit=True):
             pnombre = st.text_input("Nombre del personaje")
-            rol = st.text_input("Rol", placeholder="Ej. Profesor, rival, amiga")
-            personalidad = st.text_area(
-                "Personalidad",
-                placeholder="Ej. Reservado, amable, competitivo...",
-            )
-            anadir = st.form_submit_button("＋ Añadir personaje")
-        if anadir:
+            rol = st.text_input("Rol o relación")
+            personalidad = st.text_area("Personalidad y descripción")
+            agregar = st.form_submit_button("＋ Añadir personaje")
+
+        if agregar:
             if pnombre.strip():
                 st.session_state.personajes_draft.append({
+                    "id": str(uuid.uuid4()),
                     "nombre": pnombre.strip(),
                     "rol": rol.strip() or "Personaje",
                     "personalidad": personalidad.strip() or "Por definir",
                 })
                 st.rerun()
             else:
-                st.warning("Escribe el nombre del personaje.")
+                st.warning("Escribe un nombre para el personaje.")
 
-        for i, p in enumerate(st.session_state.personajes_draft):
+        for indice, personaje in enumerate(
+            st.session_state.personajes_draft
+        ):
             with st.container(border=True):
-                st.markdown(f"**{p['nombre']}** · {p['rol']}")
-                st.write(p["personalidad"])
-                if st.button("Eliminar", key=f"del_p_{i}"):
-                    st.session_state.personajes_draft.pop(i)
+                st.markdown(
+                    f"**{personaje['nombre']}** · {personaje['rol']}"
+                )
+                st.write(personaje["personalidad"])
+                if st.button(
+                    "Eliminar personaje",
+                    key=f"eliminar_personaje_{personaje['id']}",
+                ):
+                    st.session_state.personajes_draft.pop(indice)
                     st.rerun()
 
-        x, y = st.columns(2)
-        with x:
-            if st.button("← Anterior"):
+        anterior, siguiente = st.columns(2)
+        with anterior:
+            if st.button("← Anterior", key="paso1_atras"):
                 st.session_state.paso = 0
                 st.rerun()
-        with y:
-            if st.button("Siguiente →"):
-                d["personajes"] = st.session_state.personajes_draft
+        with siguiente:
+            if st.button("Siguiente →", key="paso1_siguiente"):
+                borrador["personajes"] = (
+                    st.session_state.personajes_draft[:]
+                )
                 st.session_state.paso = 2
                 st.rerun()
 
     elif paso == 2:
-        st.subheader("📖 El comienzo de la historia")
-        with st.form("inicio_historia"):
+        st.subheader("📖 Escena inicial")
+
+        with st.form("form_inicio"):
             inicio = st.text_input(
-                "Título de la primera escena",
-                value=d.get("inicio", "Un nuevo comienzo"),
+                "Título del comienzo",
+                value=borrador.get("inicio", "Un nuevo comienzo"),
             )
             escena = st.text_area(
-                "¿Qué está pasando al empezar?",
-                value=d.get("escena", ""),
-                placeholder="Describe el lugar, el momento y la situación inicial...",
+                "¿Qué sucede al comenzar?",
+                value=borrador.get("escena", ""),
+                height=150,
             )
-            ok = st.form_submit_button("Siguiente →")
-        if ok:
-            d["inicio"] = inicio.strip() or "Un nuevo comienzo"
-            d["escena"] = escena.strip()
+            siguiente = st.form_submit_button("Siguiente →")
+
+        if siguiente:
+            borrador["inicio"] = inicio.strip() or "Un nuevo comienzo"
+            borrador["escena"] = escena.strip()
             st.session_state.paso = 3
             st.rerun()
-        if st.button("← Anterior"):
+
+        if st.button("← Anterior", key="paso2_atras"):
             st.session_state.paso = 1
             st.rerun()
 
     elif paso == 3:
-        st.subheader("🧩 Aplicaciones del mundo")
-        st.write("Elige las herramientas que quieres tener disponibles.")
-        opciones = [
+        st.subheader("🧩 Aplicaciones del universo")
+        opciones_apps = [
             "Historias", "Personajes", "Chats",
-            "Diario", "Misiones", "Galería",
+            "Diario", "Misiones", "Galería"
         ]
-        seleccionadas = st.multiselect(
-            "Apps instaladas",
-            opciones,
-            default=d.get("apps", ["Historias", "Personajes", "Chats"]),
+        apps = st.multiselect(
+            "Selecciona las aplicaciones",
+            opciones_apps,
+            default=borrador.get(
+                "apps", ["Historias", "Personajes", "Chats"]
+            ),
         )
-        d["apps"] = seleccionadas
+        borrador["apps"] = apps
 
-        x, y = st.columns(2)
-        with x:
-            if st.button("← Anterior"):
+        anterior, siguiente = st.columns(2)
+        with anterior:
+            if st.button("← Anterior", key="paso3_atras"):
                 st.session_state.paso = 2
                 st.rerun()
-        with y:
-            if st.button("Siguiente →"):
+        with siguiente:
+            if st.button("Siguiente →", key="paso3_siguiente"):
                 st.session_state.paso = 4
                 st.rerun()
 
     elif paso == 4:
-        st.subheader("📜 Instrucciones del universo")
+        st.subheader("📜 Instrucciones")
         instrucciones = st.text_area(
-            "Reglas para narrar este mundo",
-            value=d.get("instrucciones", ""),
-            placeholder="Ej. Mantén la personalidad de los personajes, "
-                        "recuerda las decisiones y usa diálogos...",
-            height=160,
+            "Reglas para este universo",
+            value=borrador.get("instrucciones", ""),
+            height=150,
+            placeholder="Describe el tono, las reglas y cómo deben actuar los personajes...",
         )
-        d["instrucciones"] = instrucciones
+        borrador["instrucciones"] = instrucciones
 
         st.markdown("### Vista previa")
-        st.markdown(f"**{d.get('nombre', 'Mi mundo')}**")
-        st.write(d.get("descripcion", "Sin descripción"))
-        st.caption(d.get("genero", "Sin género"))
-        st.write("Personajes:", len(st.session_state.personajes_draft))
-        st.write("Apps:", ", ".join(d.get("apps", [])) or "Ninguna")
+        st.markdown(f"**{borrador.get('nombre', 'Mi mundo')}**")
+        st.write(borrador.get("descripcion", "Sin descripción"))
+        st.caption(borrador.get("genero", "Sin género"))
+        st.write(
+            "Personajes:",
+            len(st.session_state.personajes_draft),
+        )
+        st.write(
+            "Aplicaciones:",
+            ", ".join(borrador.get("apps", [])) or "Ninguna",
+        )
 
-        x, y = st.columns(2)
-        with x:
-            if st.button("← Anterior"):
+        anterior, crear = st.columns(2)
+        with anterior:
+            if st.button("← Anterior", key="paso4_atras"):
                 st.session_state.paso = 3
                 st.rerun()
-        with y:
-            if st.button("🌌 Crear universo"):
-                nombre = d.get("nombre", "").strip()
-                existe = any(
+
+        with crear:
+            if st.button("🌌 Crear universo", key="guardar_mundo"):
+                nombre = borrador.get("nombre", "").strip()
+                repetido = any(
                     m["nombre"].casefold() == nombre.casefold()
                     for m in st.session_state.mundos
                 )
+
                 if not nombre:
                     st.error("El mundo necesita un nombre.")
-                elif existe:
+                elif repetido:
                     st.error("Ya existe un mundo con ese nombre.")
                 else:
-                    m = {
+                    nuevo = {
                         "id": str(uuid.uuid4()),
                         "nombre": nombre,
-                        "descripcion": d.get("descripcion", ""),
-                        "genero": d.get("genero", "Otro"),
+                        "descripcion": borrador.get("descripcion", ""),
+                        "genero": borrador.get("genero", "Otro"),
                         "personajes": st.session_state.personajes_draft[:],
-                        "inicio": d.get("inicio", "Un nuevo comienzo"),
-                        "escena": d.get("escena", ""),
+                        "inicio": borrador.get("inicio", "Un nuevo comienzo"),
+                        "escena": borrador.get("escena", ""),
                         "instrucciones": instrucciones,
-                        "apps": d.get("apps", []),
+                        "apps": borrador.get("apps", []),
                         "historia": [
-                            d.get("escena", "").strip()
+                            borrador.get("escena", "").strip()
                             or "Tu aventura acaba de comenzar."
                         ],
                         "chats": {},
                     }
-                    st.session_state.mundos.append(m)
-                    st.session_state.mundo_id = m["id"]
-                    avisar_guardado()
+                    st.session_state.mundos.append(nuevo)
+                    st.session_state.mundo_id = nuevo["id"]
+                    guardar_y_avisar()
+
                     st.session_state.borrador = {}
                     st.session_state.personajes_draft = []
                     st.session_state.paso = 0
-                    st.success("¡Universo creado!")
-                    ir("Historia")
+                    ir_a("Historia")
+
 
 # ---------- HISTORIA ----------
-elif st.session_state.nav == "Historia":
-    m = mundo_actual()
-    if not m:
-        st.info("Primero selecciona o crea un mundo.")
-        if st.button("Ir a mis mundos"):
-            ir("Mundos")
+elif pagina == "Historia":
+    mundo = obtener_mundo()
+
+    if not mundo:
+        st.info("Selecciona un mundo o crea uno nuevo.")
+        if st.button("Ir a mundos", key="historia_ir_mundos"):
+            ir_a("Mundos")
     else:
-        st.title("📖 " + m["nombre"])
-        st.caption(m["genero"] + " · Historia interactiva")
+        st.title("📖 " + mundo["nombre"])
+        st.caption(mundo.get("genero", "Aventura"))
 
-        if "Historias" not in m.get("apps", []):
-            st.info("La app Historias no está activada en este universo.")
+        if "Historias" not in mundo.get("apps", []):
+            st.info("Activa la aplicación Historias en los ajustes del mundo.")
         else:
-            for texto in m.get("historia", []):
-                st.markdown(
-                    f'<div class="panel">{texto}</div>',
-                    unsafe_allow_html=True,
-                )
+            for entrada in mundo.get("historia", []):
+                with st.container(border=True):
+                    st.write(entrada)
 
-            st.markdown("### ¿Qué haces ahora?")
+            st.markdown("### ¿Qué decides hacer?")
             opciones = [
-                "🔎 Explorar el entorno",
-                "💬 Hablar con un personaje",
+                "🔎 Explorar el lugar",
+                "💬 Hablar con alguien",
                 "⚡ Tomar una decisión arriesgada",
             ]
-            resultados = {
-                opciones[0]: "Encuentras una pista que podría cambiar tu aventura.",
-                opciones[1]: "Un personaje se acerca y te pregunta qué necesitas.",
-                opciones[2]: "Tu decisión cambia el rumbo de la historia.",
-            }
-            cols = st.columns(3)
+            respuestas = [
+                "Encuentras una pista que podría cambiar tu aventura.",
+                "Un personaje se acerca y te pregunta qué necesitas.",
+                "Tu decisión cambia el rumbo de la historia.",
+            ]
+
+            columnas_accion = st.columns(3)
             for i, opcion in enumerate(opciones):
-                with cols[i]:
-                    if st.button(opcion, key=f"hist_{i}"):
-                        m["historia"].append(resultados[opcion])
-                        avisar_guardado()
+                with columnas_accion[i]:
+                    if st.button(opcion, key=f"decision_{i}"):
+                        mundo["historia"].append(respuestas[i])
+                        guardar_y_avisar()
                         st.rerun()
 
-            if st.button("↻ Reiniciar historia"):
-                m["historia"] = [
-                    m.get("escena", "").strip()
+            if st.button("↻ Reiniciar historia", key="reiniciar_historia"):
+                mundo["historia"] = [
+                    mundo.get("escena", "").strip()
                     or "Tu aventura acaba de comenzar."
                 ]
-                avisar_guardado()
+                guardar_y_avisar()
                 st.rerun()
 
-# ---------- CHATS ----------
-elif st.session_state.nav == "Chats":
-    st.title("💬 Chats de personajes")
-    m = mundo_actual()
 
-    if not m:
-        st.info("Crea un mundo primero.")
-    elif "Chats" not in m.get("apps", []):
-        st.info("Activa la app Chats en la configuración del mundo.")
-    elif not m.get("personajes"):
-        st.info("Este mundo aún no tiene personajes.")
+# ---------- CHATS ----------
+elif pagina == "Chats":
+    st.title("💬 Chats de personajes")
+    mundo = obtener_mundo()
+
+    if not mundo:
+        st.info("Primero crea o selecciona un mundo.")
+    elif "Chats" not in mundo.get("apps", []):
+        st.info("Activa la aplicación Chats en los ajustes del mundo.")
+    elif not mundo.get("personajes"):
+        st.info("Añade personajes al mundo para iniciar conversaciones.")
     else:
-        nombres = [p["nombre"] for p in m["personajes"]]
+        personajes = mundo["personajes"]
+        nombres = [p["nombre"] for p in personajes]
         elegido = st.selectbox("Conversar con", nombres)
-        personaje = next(p for p in m["personajes"]
-                         if p["nombre"] == elegido)
-        clave = elegido
-        mensajes = m.setdefault("chats", {}).setdefault(
-            clave,
-            [{
-                "role": "assistant",
-                "text": f"Hola, soy {elegido}. ¿Cómo comienza tu historia?"
-            }],
+        personaje = next(
+            p for p in personajes if p["nombre"] == elegido
         )
+
+        chats = mundo.setdefault("chats", {})
+        mensajes = chats.setdefault(elegido, [{
+            "role": "assistant",
+            "text": (
+                f"Hola, soy {elegido}. "
+                "¿Qué te gustaría hacer en esta aventura?"
+            ),
+        }])
 
         st.caption(personaje.get("rol", "Personaje"))
         st.write(personaje.get("personalidad", ""))
 
-        for msg in mensajes:
-            with st.chat_message(msg["role"]):
-                st.write(msg["text"])
+        for mensaje in mensajes:
+            with st.chat_message(mensaje["role"]):
+                st.write(mensaje["text"])
 
         entrada = st.chat_input("Escribe un mensaje...")
         if entrada:
@@ -512,56 +567,57 @@ elif st.session_state.nav == "Chats":
             mensajes.append({
                 "role": "assistant",
                 "text": (
-                    f"{elegido} responde a tu mensaje: "
-                    f"«{entrada}». ¿Qué decides hacer ahora?"
+                    f"{elegido} responde: «{entrada}». "
+                    "¿Qué quieres hacer ahora?"
                 ),
             })
-            avisar_guardado()
+            guardar_y_avisar()
             st.rerun()
 
-# ---------- APPS Y CONFIGURACIÓN ----------
-elif st.session_state.nav == "Apps":
-    st.title("⚙️ Apps y configuración")
-    m = mundo_actual()
 
-    if not m:
+# ---------- AJUSTES Y APLICACIONES ----------
+elif pagina == "Apps":
+    st.title("⚙️ Aplicaciones y ajustes")
+    mundo = obtener_mundo()
+
+    if not mundo:
         st.info("Selecciona un mundo primero.")
     else:
-        st.markdown(f"### 🌌 {m['nombre']}")
-        st.write(m["descripcion"])
+        st.markdown("### 🌌 " + mundo["nombre"])
+        st.write(mundo.get("descripcion", ""))
 
-        opciones = [
+        opciones_apps = [
             "Historias", "Personajes", "Chats",
-            "Diario", "Misiones", "Galería",
+            "Diario", "Misiones", "Galería"
         ]
-        activas = st.multiselect(
+        apps = st.multiselect(
             "Aplicaciones instaladas",
-            opciones,
-            default=m.get("apps", []),
+            opciones_apps,
+            default=mundo.get("apps", []),
+            key=f"apps_config_{mundo['id']}",
         )
         instrucciones = st.text_area(
-            "Instrucciones del mundo",
-            value=m.get("instrucciones", ""),
+            "Instrucciones del universo",
+            value=mundo.get("instrucciones", ""),
+            key=f"instrucciones_{mundo['id']}",
         )
 
-        if st.button("💾 Guardar configuración"):
-            m["apps"] = activas
-            m["instrucciones"] = instrucciones
-            avisar_guardado()
+        if st.button("💾 Guardar configuración", key="guardar_config"):
+            mundo["apps"] = apps
+            mundo["instrucciones"] = instrucciones
+            guardar_y_avisar()
             st.success("Configuración actualizada.")
 
-        st.markdown("### Personajes")
-        for p in m.get("personajes", []):
+        st.markdown("### 🎭 Personajes")
+        for personaje in mundo.get("personajes", []):
             with st.container(border=True):
-                st.markdown(f"**{p['nombre']}** · {p['rol']}")
-                st.write(p["personalidad"])
+                st.markdown(
+                    f"**{personaje['nombre']}** · {personaje['rol']}"
+                )
+                st.write(personaje["personalidad"])
 
 st.divider()
 st.caption(
-    "UNIVERSE OS · Prototipo gratuito. "
-    "Las respuestas de personajes aún no usan una IA real."
+    "UNIVERSE OS · Prototipo en desarrollo. "
+    "Los diálogos son respuestas preparadas, no una IA real."
 )
-
-
-       
-        
