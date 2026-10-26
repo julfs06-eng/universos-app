@@ -5,13 +5,13 @@ import streamlit as st
 from datetime import datetime
 
 st.set_page_config(
-    page_title="WorldOS Advanced Simulator",
+    page_title="WorldOS - Advanced Roleplay Simulator",
     page_icon="🌌",
     layout="centered",
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS de alta fidelidad estilo Cyber-OS móvil
+# Estilos CSS avanzados estilo interfaz móvil
 st.markdown("""
     <style>
     .stApp {
@@ -77,6 +77,15 @@ st.markdown("""
         max-width: 80%;
         font-size: 13px;
     }
+    .story-card {
+        background: #161b22;
+        border-left: 4px solid #58a6ff;
+        padding: 15px;
+        border-radius: 0 12px 12px 0;
+        margin-bottom: 15px;
+        font-size: 14px;
+        line-height: 1.5;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -93,12 +102,22 @@ def cargar_datos():
         "mundos": {
             "My Hero Academia": {
                 "eslogan": "Academia U.A. / Sociedad de Héroes bajo tensión extrema.",
-                "cover": "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=600",
+                "tema": "Classic",
                 "personajes": {
-                    "Shoto Todoroki": {"rol": "Estudiante 1-A", "romance": 60, "amistad": 80},
-                    "Katsuki Bakugo": {"rol": "Estudiante 1-A", "romance": 20, "amistad": 40}
+                    "Shoto Todoroki": {"rol": "Estudiante 1-A", "romance": 50, "amistad": 60},
+                    "Katsuki Bakugo": {"rol": "Estudiante 1-A", "romance": 10, "amistad": 20},
+                    "Izuku Midoriya": {"rol": "Estudiante 1-A", "romance": 30, "amistad": 80}
                 },
-                "apps": ["WhatsApp", "Instagram", "X (Twitter)", "Foro"]
+                "apps": ["WhatsApp", "Instagram", "X (Twitter)", "Foro"],
+                "historia": [
+                    {"turno": 1, "texto": "Hoy tuve el examen de admisión a la U.A. La tensión en el campo de prueba era insoportable, pero logré demostrar el control de mi quirk frente a los examinadores."}
+                ],
+                "posts_insta": [
+                    {"autor": "@akaribeaumont", "texto": "Primer día superado en la U.A. ¡Esto apenas comienza! ⚡ #FestivalDeportivoUA", "likes": 344}
+                ],
+                "posts_twitter": [
+                    {"autor": "Ren Ui @renui", "texto": "Si la Clase 1-A sobrevive a la primera semana sin explotar los dormitorios compro boletos para todos. 🎤"}
+                ]
             }
         }
     }
@@ -116,16 +135,10 @@ if "current_view" not in st.session_state:
 if "selected_world" not in st.session_state:
     st.session_state.selected_world = "My Hero Academia"
 
-if "world_tab" not in st.session_state:
-    st.session_state.world_tab = "Básicos"
+if "player_profile" not in st.session_state:
+    st.session_state.player_profile = {"nombre": "Akari Beaumont", "trasfondo": "Estudiante de intercambio con control elemental"}
 
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = [
-        {"sender": "Izuku Midoriya", "text": "¡Hola! ¿Listos para el entrenamiento de quirks?"},
-        {"sender": "Katsuki Bakugo", "text": "¡APARTÉNSE O LOS VOY A EXPLOTAR A TODOS!"}
-    ]
-
-# MARCO DE LA INTERFAZ MÓVIL
+# MARCO MÓVIL PRINCIPAL
 st.markdown('<div class="phone-container">', unsafe_allow_html=True)
 
 # BARRA DE ESTADO
@@ -133,208 +146,234 @@ hora_es = datetime.now().strftime("%H:%M")
 st.markdown(f'''
     <div class="status-bar">
         <span>📶 5G  🕒 {hora_es}</span>
-        <span style="color: #58a6ff; font-weight: bold;">WORLD OS</span>
+        <span style="color: #58a6ff; font-weight: bold;">WORLD OS MOBILE</span>
         <span>🔋 100%</span>
     </div>
 ''', unsafe_allow_html=True)
 
 # BOTÓN DE RETORNO GLOBAL SI NO ESTAMOS EN HOME
 if st.session_state.current_view != "Home":
-    if st.button("⬅️ Volver al Escritorio / Menú"):
+    if st.button("⬅️ Volver al Menú Principal"):
         st.session_state.current_view = "Home"
         st.rerun()
     st.markdown("---")
 
-# ================= 📱 PANTALLA PRINCIPAL (HOME / ESCRITORIO) =================
+# ================= 📱 PANTALLA PRINCIPAL / ESCRITORIO =================
 if st.session_state.current_view == "Home":
-    st.markdown("<h4 style='text-align: center; margin-bottom: 5px;'>📱 WorldOS Desktop</h4>", unsafe_allow_html=True)
-    st.markdown(f"<p style='text-align: center; color: #8b949e; font-size: 12px;'>Mundo activo: <b>{st.session_state.selected_world}</b></p>", unsafe_allow_html=True)
+    st.markdown(f"<h4 style='text-align: center; margin-bottom: 2px;'>🌌 {st.session_state.selected_world}</h4>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; color: #8b949e; font-size: 11px;'>Jugador: <b>{st.session_state.player_profile['nombre']}</b></p>", unsafe_allow_html=True)
     
-    # Cuadrícula de Apps estilo Teléfono
+    # Grid de Aplicaciones del SO Móvil
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        if st.button("💬\nChat"):
-            st.session_state.current_view = "WhatsApp"
+        if st.button("📖\nRol / Story"):
+            st.session_state.current_view = "StoryMode"
             st.rerun()
     with c2:
+        if st.button("💬\nWhatsApp"):
+            st.session_state.current_view = "WhatsApp"
+            st.rerun()
+    with c3:
         if st.button("📸\nInsta"):
             st.session_state.current_view = "Instagram"
             st.rerun()
-    with c3:
+    with c4:
         if st.button("🐦\nX/Tweet"):
             st.session_state.current_view = "Twitter"
-            st.rerun()
-    with c4:
-        if st.button("🤫\nForo"):
-            st.session_state.current_view = "Foro"
             st.rerun()
 
     c5, c6, c7, c8 = st.columns(4)
     with c5:
+        if st.button("🤫\nForo"):
+            st.session_state.current_view = "Foro"
+            st.rerun()
+    with c6:
         if st.button("📊\nStats"):
             st.session_state.current_view = "Stats"
             st.rerun()
-    with c6:
-        if st.button("🏆\nLogros"):
-            st.session_state.current_view = "Logros"
-            st.rerun()
     with c7:
-        if st.button("⚙️\nEditor"):
+        if st.button("🛠️\nEditor"):
             st.session_state.current_view = "EditorMundo"
             st.rerun()
     with c8:
-        if st.button("🌌\nMundos"):
-            st.session_state.current_view = "SelectorMundos"
+        if st.button("➕\nCrear"):
+            st.session_state.current_view = "CrearMundo"
             st.rerun()
 
-# ================= ⚙️ EDITOR DE MUNDO (CON PESTAÑAS) =================
-elif st.session_state.current_view == "EditorMundo":
-    mundo_actual = st.session_state.selected_world
-    st.markdown(f"### 🛠️ Configurar: {mundo_actual}")
-    
-    # Pestañas superiores del editor
-    t1, t2, t3 = st.columns(3)
-    with t1:
-        if st.button("📋 Básicos", use_container_width=True):
-            st.session_state.world_tab = "Básicos"
-    with t2:
-        if st.button("👤 Personajes", use_container_width=True):
-            st.session_state.world_tab = "Personajes"
-    with t3:
-        if st.button("🧩 Apps", use_container_width=True):
-            st.session_state.world_tab = "Apps"
-            
     st.markdown("---")
-    
-    info = st.session_state.data["mundos"][mundo_actual]
-    
-    if st.session_state.world_tab == "Básicos":
-        nuevo_eslogan = st.text_input("Eslogan del mundo", value=info.get("eslogan", ""))
-        nueva_cover = st.text_input("URL de imagen de portada", value=info.get("cover", ""))
-        
-        if nueva_cover:
-            st.image(nueva_cover, use_column_width=True)
-            
-        if st.button("💾 Guardar Cambios Básicos"):
-            info["eslogan"] = nuevo_eslogan
-            info["cover"] = nueva_cover
-            guardar_datos(st.session_state.data)
-            st.success("¡Cambios guardados con éxito!")
-            
-    elif st.session_state.world_tab == "Personajes":
-        st.markdown("##### Agregar Personaje")
-        p_nombre = st.text_input("Nombre del personaje")
-        p_rol = st.text_input("Rol o descripción")
-        if st.button("+ Registrar Personaje"):
-            if p_nombre:
-                info["personajes"][p_nombre] = {"rol": p_rol, "romance": 50, "amistad": 50}
-                guardar_datos(st.session_state.data)
-                st.success(f"¡{p_nombre} agregado correctamente!")
-                
-        st.markdown("##### Personajes actuales:")
-        for p, d in info.get("personajes", {}).items():
-            st.markdown(f"- **{p}**: {d.get('rol', '')}")
-            
-    elif st.session_state.world_tab == "Apps":
-        st.markdown("##### Apps Instaladas en este mundo")
-        for app in info.get("apps", []):
-            st.markdown(f"✅ **{app}** (Activa)")
+    st.markdown("##### 🌐 Cambiar de Mundo Activo:")
+    for m_nombre in st.session_state.data["mundos"].keys():
+        if st.button(f"✨ Cargar Universo: {m_nombre}", key=f"load_{m_nombre}"):
+            st.session_state.selected_world = m_nombre
+            st.rerun()
 
-# ================= 💬 WHATSAPP / CHAT INTERACTIVO =================
-elif st.session_state.current_view == "WhatsApp":
-    st.markdown("### 💬 WhatsApp - Grupo Clase 1-A")
+# ================= 📖 MODO HISTORIA / ROL ACTIVO =================
+elif st.session_state.current_view == "StoryMode":
+    mundo = st.session_state.selected_world
+    info_m = st.session_state.data["mundos"][mundo]
     
-    for msg in st.session_state.chat_history:
+    st.markdown(f"### 📖 Bitácora de Historia: {mundo}")
+    st.caption("La IA procesa tus acciones y actualiza dinámicamente el mundo.")
+
+    # Mostrar historial de la historia
+    for evento in info_m.get("historia", []):
+        st.markdown(f'<div class="story-card"><b>Turno {evento["turno"]}:</b><br>{evento["texto"]}</div>', unsafe_allow_html=True)
+
+    st.markdown("---")
+    nueva_accion = st.text_area("¿Qué haces o qué dicén en esta escena?", placeholder="Ej: Me acerco a Todoroki y le pregunto sobre el examen...")
+    
+    if st.button("▶️ Avanzar Turno y Simular IA"):
+        if nueva_accion:
+            nuevo_turno = len(info_m["historia"]) + 1
+            # Simulación inteligente de respuesta y cambios en el mundo
+            respuesta_pro = f"Tu acción ('{nueva_accion}') altera el ambiente. Shoto te mira fijamente evaluando tu fuerza, mientras Bakugo estalla de frustración a lo lejos."
+            info_m["historia"].append({"turno": nuevo_turno, "texto": f"**Tú:** {nueva_accion}<br><br>💡 **IA Directora:** {respuesta_pro}"})
+            
+            # Modificar estadísticas de forma automática según el rol
+            for p_name, p_data in info_m["personajes"].items():
+                p_data["amistad"] = min(100, p_data["amistad"] + random.randint(2, 8))
+                
+            guardar_datos(st.session_state.data)
+            st.success("¡Turno procesado y estadísticas actualizadas!")
+            st.rerun()
+
+# ================= 🛠️ CREAR Y EDITAR MUNDO =================
+elif st.session_state.current_view == "CrearMundo":
+    st.markdown("### ➕ Crear un Nuevo Mundo")
+    nuevo_nombre = st.text_input("Nombre del Universo / Fandom", placeholder="Ej: Jujutsu Kaisen")
+    nuevo_eslogan = st.text_input("Eslogan o premisa", placeholder="Ej: Maldiciones y hechicería moderna.")
+    
+    st.markdown("##### Configuración del Jugador")
+    p_nombre = st.text_input("Tu Nombre en este mundo", value="Akari Beaumont")
+    p_trasfondo = st.text_input("Tu Trasfondo / Poder", value="Hechicera de grado especial")
+
+    if st.button("Guardar y Activar Universo"):
+        if nuevo_nombre:
+            st.session_state.data["mundos"][nuevo_nombre] = {
+                "eslogan": nuevo_eslogan,
+                "tema": "Classic",
+                "personajes": {"Satoru Gojo": {"rol": "Profesor", "romance": 40, "amistad": 70}},
+                "apps": ["WhatsApp", "Instagram", "X (Twitter)", "Foro"],
+                "historia": [{"turno": 1, "texto": f"Inicio de la aventura para {p_nombre} en {nuevo_nombre}."}],
+                "posts_insta": [],
+                "posts_twitter": []
+            }
+            guardar_datos(st.session_state.data)
+            st.session_state.selected_world = nuevo_nombre
+            st.session_state.player_profile = {"nombre": p_nombre, "trasfondo": p_trasfondo}
+            st.session_state.current_view = "Home"
+            st.success(f"¡Universo {nuevo_nombre} creado con éxito!")
+            st.rerun()
+
+elif st.session_state.current_view == "EditorMundo":
+    mundo = st.session_state.selected_world
+    info_m = st.session_state.data["mundos"][mundo]
+    st.markdown(f"### 🛠️ Editor: {mundo}")
+    
+    nuevo_eslogan = st.text_input("Editar Eslogan", value=info_m.get("eslogan", ""))
+    
+    st.markdown("##### 👥 Agregar Personaje al Mundo")
+    c_nombre = st.text_input("Nombre del personaje (Ej: Denki Kaminari)")
+    c_rol = st.text_input("Rol (Ej: Estudiante)")
+    if st.button("+ Añadir Personaje"):
+        if c_nombre:
+            info_m["personajes"][c_nombre] = {"rol": c_rol, "romance": 20, "amistad": 50}
+            guardar_datos(st.session_state.data)
+            st.success(f"¡{c_nombre} añadido al mundo!")
+
+    if st.button("💾 Guardar Cambios"):
+        info_m["eslogan"] = nuevo_eslogan
+        guardar_datos(st.session_state.data)
+        st.success("¡Actualizado correctamente!")
+
+# ================= 💬 WHATSAPP / CHAT GRUPAL =================
+elif st.session_state.current_view == "WhatsApp":
+    mundo = st.session_state.selected_world
+    st.markdown(f"### 💬 WhatsApp - {mundo}")
+    
+    if "wa_msgs" not in st.session_state:
+        st.session_state.wa_msgs = [
+            {"sender": "Izuku Midoriya", "text": "¡Hola a todos! ¿Repasaron los apuntes para mañana?"},
+            {"sender": "Katsuki Bakugo", "text": "¡DEJA DE MOLESTAR CON TUS APUNTES DEKU!"}
+        ]
+
+    for msg in st.session_state.wa_msgs:
         if msg["sender"] == "user":
             st.markdown(f'<div class="chat-user">{msg["text"]}</div>', unsafe_allow_html=True)
         else:
             st.markdown(f'<div class="chat-bot"><b>{msg["sender"]}:</b> {msg["text"]}</div>', unsafe_allow_html=True)
 
-    user_msg = st.text_input("Escribe tu mensaje...", key="input_chat")
-    if st.button("Enviar Mensaje"):
-        if user_msg:
-            st.session_state.chat_history.append({"sender": "user", "text": user_msg})
-            # Respuesta automatizada de los personajes del mundo
-            personajes_disponibles = list(st.session_state.data["mundos"][st.session_state.selected_world]["personajes"].keys())
-            personaje_que_responde = random.choice(personajes_disponibles) if personajes_disponibles else "Katsuki Bakugo"
-            
-            respuestas_ia = [
-                f"¡No digas tonterías sobre eso!",
-                f"Entiendo perfectamente lo que dices, lo tendré en cuenta.",
-                f"¡¡¡DEJAME EN PAZ CON ESAS ESTUPIDECES Deku/Extra!!!",
-                f"Muy interesante punto de vista..."
-            ]
-            st.session_state.chat_history.append({"sender": personaje_que_responde, "text": random.choice(respuestas_ia)})
+    wa_input = st.text_input("Escribe al grupo de WhatsApp...")
+    if st.button("Enviar a WhatsApp"):
+        if wa_input:
+            st.session_state.wa_msgs.append({"sender": "user", "text": wa_input})
+            pjs = list(st.session_state.data["mundos"][mundo]["personajes"].keys())
+            respondedor = random.choice(pjs) if pjs else "Bakugo"
+            st.session_state.wa_msgs.append({"sender": respondedor, "text": "¡Vaya comentario tan interesante... lo tendré en cuenta!"})
             st.rerun()
 
 # ================= 📸 INSTAGRAM =================
 elif st.session_state.current_view == "Instagram":
+    mundo = st.session_state.selected_world
+    info_m = st.session_state.data["mundos"][mundo]
     st.markdown("### 📸 Instagram Feed")
-    st.markdown('''
-        <div class="card-box">
-            <b>@akaribeaumont</b> • U.A. High<br>
-            <p style="margin: 8px 0; font-size: 13px;">Entrenamiento completado en la Zona Simulada. ¡Cada vez más fuertes! ⚡🔥 #FestivalDeportivoUA</p>
-            <span style="color: #f778ba; font-size: 12px;">❤️ 412 Me gusta</span>
-        </div>
-    ''', unsafe_allow_html=True)
+    
+    nuevo_post = st.text_input("Publicar foto/estado en Instagram...")
+    if st.button("Publicar en Insta"):
+        if nuevo_post:
+            info_m["posts_insta"].insert(0, {"autor": f"@{st.session_state.player_profile['nombre'].lower().replace(' ', '')}", "texto": nuevo_post, "likes": 1})
+            guardar_datos(st.session_state.data)
+            st.success("¡Publicado en Instagram!")
+
+    for post in info_m.get("posts_insta", []):
+        st.markdown(f'''
+            <div class="card-box">
+                <b>{post["autor"]}</b><br>
+                <p style="margin: 6px 0; font-size: 13px;">{post["texto"]}</p>
+                <span style="color: #f778ba; font-size: 12px;">❤️ {post["likes"]} Me gusta</span>
+            </div>
+        ''', unsafe_allow_html=True)
 
 # ================= 🐦 TWITTER / X =================
 elif st.session_state.current_view == "Twitter":
+    mundo = st.session_state.selected_world
+    info_m = st.session_state.data["mundos"][mundo]
     st.markdown("### 🐦 X (Twitter)")
-    st.markdown('''
-        <div class="card-box">
-            <b>Ren Ui</b> <span style="color:#8b949e;">@renui</span><br>
-            <p style="margin: 6px 0; font-size: 13px;">Si la 1-A hace desastre en los dormitorios otra vez, juro que me mudo. #FestivalDeportivoUA</p>
-        </div>
-    ''', unsafe_allow_html=True)
+    
+    tw_input = st.text_input("¿Qué está pasando? (Tweet)...")
+    if st.button("Twittear"):
+        if tw_input:
+            info_m["posts_twitter"].insert(0, {"autor": f"{st.session_state.player_profile['nombre']} @user", "texto": tw_input})
+            guardar_datos(st.session_state.data)
+            st.success("¡Tweet publicado!")
+
+    for tw in info_m.get("posts_twitter", []):
+        st.markdown(f'''
+            <div class="card-box">
+                <b>{tw["autor"]}</b><br>
+                <p style="margin: 6px 0; font-size: 13px;">{tw["texto"]}</p>
+            </div>
+        ''', unsafe_allow_html=True)
 
 # ================= 🤫 FORO ANÓNIMO =================
 elif st.session_state.current_view == "Foro":
     st.markdown("### 🤫 Foro Anónimo")
     st.markdown('''
         <div class="card-box">
-            <b>pasillo_1a</b><br>
-            <p style="margin: 4px 0; font-size: 13px;">¿Alguien sabe por qué Bakugo estaba gritándole al casillero esta mañana?</p>
+            <b>pasillo_secreto</b><br>
+            <p style="margin: 4px 0; font-size: 13px;">¿Alguien notó lo intenso que estuvo el entrenamiento hoy?</p>
         </div>
     ''', unsafe_allow_html=True)
 
-# ================= 📊 ESTADÍSTICAS =================
+# ================= 📊 ESTADÍSTICAS DE RELACIÓN =================
 elif st.session_state.current_view == "Stats":
-    st.markdown("### 📊 Vínculos con Personajes")
-    mundo_sel = st.session_state.selected_world
-    pjs = st.session_state.data["mundos"][mundo_sel].get("personajes", {})
+    mundo = st.session_state.selected_world
+    pjs = st.session_state.data["mundos"][mundo].get("personajes", {})
+    st.markdown(f"### 📊 Vínculos de Personajes - {mundo}")
+    
     for nombre, stats in pjs.items():
         st.write(f"**{nombre}** ({stats.get('rol', '')})")
         st.progress(stats.get("romance", 50)/100, text=f"❤️ Romance: {stats.get('romance', 50)}%")
         st.progress(stats.get("amistad", 50)/100, text=f"🤝 Amistad: {stats.get('amistad', 50)}%")
-
-# ================= 🏆 LOGROS =================
-elif st.session_state.current_view == "Logros":
-    st.markdown("### 🏆 Logros")
-    st.success("🥇 ¡Héroe número uno! - Desbloqueado")
-    st.success("🤝 ¡Nuevos amigos! - Desbloqueado")
-
-# ================= 🌌 SELECTOR DE MUNDOS =================
-elif st.session_state.current_view == "SelectorMundos":
-    st.markdown("### 🌌 Mis Mundos")
-    nuevo_mundo = st.text_input("Crear nuevo mundo / Fandom")
-    if st.button("Crear Universo"):
-        if nuevo_mundo and nuevo_mundo not in st.session_state.data["mundos"]:
-            st.session_state.data["mundos"][nuevo_mundo] = {
-                "eslogan": "Nuevo universo creado desde cero.",
-                "cover": "",
-                "personajes": {},
-                "apps": ["WhatsApp", "Instagram"]
-            }
-            guardar_datos(st.session_state.data)
-            st.success(f"¡Mundo '{nuevo_mundo}' creado!")
-            
-    st.markdown("---")
-    st.markdown("##### Seleccionar activo:")
-    for m in st.session_state.data["mundos"].keys():
-        if st.button(f"✨ Activar: {m}", key=f"sel_{m}"):
-            st.session_state.selected_world = m
-            st.session_state.current_view = "Home"
-            st.rerun()
 
 st.markdown('</div>', unsafe_allow_html=True)
