@@ -688,11 +688,10 @@ elif pagina == "Chats":
                 "text": nuevo_mensaje
             })
 
-            respuesta = responder_con_gemini(
-                mundo=mundo,
-                personaje=personaje,
-                mensajes=mensajes,
-                mensaje_usuario=nuevo_mensaje
+            respuesta = generar_respuesta_gemini(
+                            respuesta = generar_respuesta_gemini(
+                mundo, personaje, mensajes
+            ) mensaje_usuario=nuevo_mensaje
             )
 
             mensajes.append({
